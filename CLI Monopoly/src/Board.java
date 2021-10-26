@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Board {
+public class Board implements Serializable {
     protected ArrayList<Square> squares = new ArrayList<>();
 
     public Board() {
