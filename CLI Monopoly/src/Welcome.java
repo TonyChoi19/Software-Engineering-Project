@@ -1,9 +1,10 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Welcome {
+public class Welcome implements Serializable {
     ArrayList<String> line = new ArrayList<>();
 
     /* load the text in welcome.txt to the arraylist */

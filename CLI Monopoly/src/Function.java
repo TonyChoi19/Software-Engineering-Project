@@ -1,4 +1,6 @@
-public class Function extends Square{
+import java.io.Serializable;
+
+public class Function extends Square implements Serializable {
 
     public Function(int pos, String name) {
         this.pos = pos;

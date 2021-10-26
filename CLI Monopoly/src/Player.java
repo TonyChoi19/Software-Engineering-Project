@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Player {
+public class Player implements Serializable {
     private String name;
 
     private int money;
@@ -43,10 +44,6 @@ public class Player {
         return properties;
     }
 
-    public void setMoney(int money) {
-        this.money = money;
-    }
-
     public void setPos(int pos) {
         this.pos = pos;
     }
@@ -59,6 +56,9 @@ public class Player {
         this.inJailCount = inJailCount;
     }
 
+    public void setMoney(int money) {
+        this.money = money;
+    }
 
     public void move(int step){
         if (this.pos + step > 20){

@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public abstract class Square {
+public abstract class Square implements Serializable {
     protected int pos;
     protected String name;
     protected int price;
@@ -8,6 +9,7 @@ public abstract class Square {
     protected Player owner;
 
     protected boolean isProperty(){return false;}
+
     protected  boolean isFunction(){return false;}
 
     protected Player belongsTo(){return null;}

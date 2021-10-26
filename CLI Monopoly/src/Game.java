@@ -1,9 +1,10 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Game {
+public class Game implements Serializable {
     private int playerCount;
     private int gameRound;
     protected ArrayList<Player> playersList = new ArrayList<>();
@@ -28,6 +29,10 @@ public class Game {
 
     public int getGameRound() {
         return gameRound;
+    }
+
+    public int getPlayerCount() {
+        return playerCount;
     }
 
     public void endPlayer(Player player){

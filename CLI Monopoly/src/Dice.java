@@ -1,4 +1,6 @@
-public class Dice {
+import java.io.Serializable;
+
+public class Dice implements Serializable {
         private int die1;
         private int die2;
         private boolean isDouble;
@@ -29,8 +31,8 @@ public class Dice {
         return isDouble;
     }
 
-    public void setDouble(boolean aDouble) {
-        isDouble = aDouble;
+    public void setDouble(boolean Double) {
+        isDouble = Double;
     }
 
     public int throwDice(){

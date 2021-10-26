@@ -1,14 +1,17 @@
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
+
 import javax.swing.plaf.synth.SynthTextAreaUI;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Random;
 
 public class Controller {
     private InputStreamReader isr;
     private BufferedReader br;
-    private ArrayList<GameRecord> recordsList;
 
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_GREEN = "\u001B[32m";
@@ -17,17 +20,11 @@ public class Controller {
     public Controller() {
         this.isr = new InputStreamReader(System.in);
         this.br = new BufferedReader(isr);
-        this.recordsList=new ArrayList<>();
     }
 
     public void start() throws InterruptedException {
         Welcome welcome = new Welcome();
         welcome. playWelcome();
-
-        GameRecord record = new GameRecord();
-        for( int i =0 ; i<10; i++){
-            recordsList.add(record);
-        }
 
         String input = null;
 
@@ -37,6 +34,7 @@ public class Controller {
 
             outerLoop:
             switch (input) {
+                /* NEW GAME */
                 case "1":
                     do {
                         System.out.println("\nPlease enter the number of players: (Minimum=2, Maximum=6)");
@@ -46,6 +44,7 @@ public class Controller {
                     } while (Integer.parseInt(input) < 2 || Integer.parseInt(input) > 6);
 
                     Game game = new Game(Integer.parseInt(input));
+
                     while(game.getGameRound() <=100 && game.playersList.size() != 1){
                         for( Player player : game.playersList ){
                             System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
@@ -73,7 +72,6 @@ public class Controller {
                                 }
 
                             }
-
 
                             boolean repeatMenuFlag;
                             do {
@@ -144,42 +142,51 @@ public class Controller {
                                         continue;
                                     }
 
-                                    System.out.println("What would you like to name your record?");
+                                    printRecords();
+                                    File directory = new File(".\\game records");
+                                    if (!directory.exists() && !directory.isDirectory())
+                                        if (directory.mkdir())
+                                            System.out.println("Directory for game record is created.");
+
+                                    System.out.println("\nWhat would you like to name your record?");
                                     input = scanInput();
 
-                                    record = new GameRecord(input, game, player);
-
-                                    do {
-                                        printRecords();
-                                        System.out.println("Which record slot you want to save into?");
-                                        input = scanInput();
-                                        if (!isVaildForSaveInput(input)) {
-                                            printInvalidMsg();
-                                            continue;
-                                        }
-
-                                        int chosenNumber = Integer.parseInt(input);
-                                        if (recordsList.get(chosenNumber - 1).isWritten()) {
+                                    String recordName = input;
+                                    if (isUniqueNameRecords(recordName) && countRecords()<5){
+                                        saveGame(recordName, game, player);
+                                        repeatMenuFlag = true;
+                                    }
+                                    else{
+                                        if (countRecords()==5){
                                             do {
-                                                System.out.println("Do you want to replace the record (" + recordsList.get(chosenNumber - 1).getName() + ") by current record?(Y/N)");
+                                                System.out.println("Please choose one record to overwrite." );
+                                                input = scanInput();
+                                                if (!isVaildForSaveInput(input))
+                                                    printInvalidMsg();
+                                            }while(!isVaildForSaveInput(input));
+
+                                            deleteRecords(Integer.parseInt(input));
+                                            saveGame(recordName, game, player);
+                                            repeatMenuFlag = true;
+                                        }else{
+                                            do {
+                                                System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
                                                 input = scanInput();
                                                 if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
                                                     printInvalidMsg();
-                                            } while (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
+                                            }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
 
-                                            if (input.toUpperCase().equals("Y")) {
-                                                recordsList.set(chosenNumber - 1, record);
-                                                System.out.println("Record saved successfully.\n");
-                                                System.out.println();
+                                            if (input.toUpperCase().equals("Y")){
+                                                deleteRecords(recordName);
+                                                saveGame(recordName, game, player);
                                                 repeatMenuFlag = true;
-                                                break;
+                                            }else{
+                                                repeatMenuFlag = true;
                                             }
-                                        } else {
-                                            recordsList.set(chosenNumber - 1, record);
-                                            System.out.println("Record saved successfully.\n");
-                                            repeatMenuFlag = true;
                                         }
-                                    } while (!isVaildForSaveInput(input));
+
+                                    }
+
 
                                 } else if (input.equals("5")) {
                                     break outerLoop;
@@ -292,27 +299,21 @@ public class Controller {
 
                         chosenRecordNo = Integer.parseInt(input);
 
-                        if (!recordsList.get(chosenRecordNo-1).isWritten()) {
-                            System.out.println("You cannot load a empty record!");
-                            input ="";
-                            break;
-                        }
-
-                        Game newGame;
-                        newGame = recordsList.get(chosenRecordNo-1).getGame();
+                        GameRecord  loadedGameRecord = loadGame(findRecords(chosenRecordNo));
+                        Game loadedGame = loadedGameRecord.getGame();
                         int loadedGameRound;
-                        loadedGameRound = recordsList.get(chosenRecordNo-1).getGame().getGameRound();
+                        loadedGameRound = loadedGame.getGameRound();
                         boolean playerFoundInFirstRound = false;
 
-                        while(newGame.getGameRound() <=100 && newGame.playersList.size() != 1){
-                            for( Player player : newGame.playersList ){
-                                if (player!=recordsList.get(chosenRecordNo-1).getPlayerTurn() && newGame.getGameRound()==loadedGameRound && !playerFoundInFirstRound){
+                        while(loadedGame.getGameRound() <=100 && loadedGame.playersList.size() != 1){
+                            for( Player player : loadedGame.playersList ){
+                                if (player!=loadedGameRecord.getPlayerTurn() && loadedGame.getGameRound()==loadedGameRound && !playerFoundInFirstRound){
                                     continue;
                                 }
                                 else
                                     playerFoundInFirstRound = true;
 
-                                System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + newGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + newGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
+                                System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
 
                                 int step=0;
 
@@ -347,11 +348,11 @@ public class Controller {
 
                                     if (input.equals("1")){
                                         /* player throws dice */
-                                        step = newGame.dice.throwDice();
-                                        newGame.dice.printValue();
+                                        step = loadedGame.dice.throwDice();
+                                        loadedGame.dice.printValue();
 
                                         /* player in jail gets double */
-                                        if (newGame.dice.isDouble() && player.isInJail()){
+                                        if (loadedGame.dice.isDouble() && player.isInJail()){
                                             player.releaseFromJail("Double");
                                         }else{
                                             /* player in jail (not third turn) doesn't throw a double */
@@ -367,7 +368,7 @@ public class Controller {
                                                 }else{
                                                     System.out.println("You do not have enough money.");
                                                     player.deductMoney(150, "Fine");
-                                                    newGame.endPlayer(player);
+                                                    loadedGame.endPlayer(player);
                                                 }
                                             }
                                         }
@@ -380,7 +381,7 @@ public class Controller {
 
 
                                     else if (input.equals("2")){
-                                        System.out.println("\nRound " + newGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + newGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney());
+                                        System.out.println("\nRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney());
                                         System.out.println("Your property:");
                                         if (player.getProperties().isEmpty())
                                             System.out.println("NONE");
@@ -393,7 +394,7 @@ public class Controller {
                                         System.out.println(" ");
                                     }
                                     else if (input.equals("3")){
-                                        newGame.board.printBoard();
+                                        loadedGame.board.printBoard();
                                     }
                                     else if (input.equals("4")){
                                         //Save record
@@ -414,72 +415,77 @@ public class Controller {
                                             continue;
                                         }
 
-                                        System.out.println("What would you like to name your record?");
+                                        printRecords();
+                                        File directory = new File(".\\game records");
+                                        if (!directory.exists() && !directory.isDirectory())
+                                            if (directory.mkdir())
+                                                System.out.println("Directory for game record is created.");
+                                        System.out.println("\nWhat would you like to name your record?");
                                         input = scanInput();
 
-                                        record = new GameRecord(input, newGame, player);
-
-                                        do {
-                                            printRecords();
-                                            System.out.println("Which record slot you want to save into?");
-                                            input = scanInput();
-                                            if (!isVaildForSaveInput(input)){
-                                                printInvalidMsg();
-                                                continue;
-                                            }
-
-                                            int chosenNumber = Integer.parseInt(input);
-                                            if (recordsList.get(chosenNumber-1).isWritten()){
+                                        String recordName = input;
+                                        if (isUniqueNameRecords(recordName) && countRecords()<5){
+                                            saveGame(recordName, loadedGame, player);
+                                            repeatMenuFlag = true;
+                                        }
+                                        else{
+                                            if (countRecords()==5){
                                                 do {
-                                                    System.out.println("Do you want to replace the record (" + recordsList.get(chosenNumber-1).getName() + ") by current record?(Y/N)");
+                                                    System.out.println("Please choose one record to overwrite." );
+                                                    input = scanInput();
+                                                    if (!isVaildForSaveInput(input))
+                                                        printInvalidMsg();
+                                                }while(!isVaildForSaveInput(input));
+
+                                                deleteRecords(Integer.parseInt(input));
+                                                saveGame(recordName, loadedGame, player);
+                                                repeatMenuFlag = true;
+                                            }else{
+                                                do {
+                                                    System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
                                                     input = scanInput();
                                                     if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
                                                         printInvalidMsg();
                                                 }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
 
-                                                if (input.toUpperCase().equals("Y") ){
-                                                    recordsList.set(chosenNumber-1, record);
-                                                    System.out.println("Record saved successfully.\n");
-                                                    System.out.println();
+                                                if (input.toUpperCase().equals("Y")){
+                                                    deleteRecords(recordName);
+                                                    saveGame(recordName, loadedGame, player);
                                                     repeatMenuFlag = true;
-                                                    break;
+                                                }else{
+                                                    repeatMenuFlag = true;
                                                 }
-                                            }else{
-                                                recordsList.set(chosenNumber-1, record);
-                                                System.out.println("Record saved successfully.\n");
-                                                repeatMenuFlag = true;
                                             }
-                                        }while(!isVaildForSaveInput(input));
 
-                                    }
-                                    else if (input.equals("5")){
+                                        }
+
+
+                                    } else if (input.equals("5")) {
                                         break outerLoop;
-                                    }
-
-                                    else
+                                    } else
                                         printInvalidMsg();
 
-                                }while(!input.equals("1") || repeatMenuFlag);
+                                } while (!input.equals("1") || repeatMenuFlag);
 
                                 /* print player's pos after moving */
-                                newGame.printDetailedPos(player.getPos());
+                                loadedGame.printDetailedPos(player.getPos());
 
                                 /* move to next point */
                                 int newPlayerPos = player.getPos();
-                                if (newGame.board.findSquare(newPlayerPos).getName().equals("Go to Jail")){
+                                if (loadedGame.board.findSquare(newPlayerPos).getName().equals("Go to Jail")){
                                     System.out.println("You are going to jail(6).");
                                     player.setPos(6);
                                     player.setInJail(true);
                                 }
 
-                                if (newGame.board.findSquare(newPlayerPos).getName().equals("Income tax")){
+                                if (loadedGame.board.findSquare(newPlayerPos).getName().equals("Income tax")){
                                     int tax;
                                     tax = (int) ((player.getMoney()*0.01/10)*10);
                                     System.out.println("You have to pay income tax for 10% of your money. (HKD"+ tax + ")");
                                     player.deductMoney(tax, "Tax");
                                 }
 
-                                if (newGame.board.findSquare(newPlayerPos).getName().equals("Chance")){
+                                if (loadedGame.board.findSquare(newPlayerPos).getName().equals("Chance")){
                                     Random random = new Random();
                                     int rand=0;
                                     while(rand==0) {
@@ -494,14 +500,14 @@ public class Controller {
                                         }else{
                                             System.out.println("You do not have enough money.");
                                             player.deductMoney(rand, "Fee");
-                                            newGame.endPlayer(player);
+                                            loadedGame.endPlayer(player);
                                         }
                                     }
                                 }
 
-                                if (newGame.board.findSquare(newPlayerPos).isProperty()){
+                                if (loadedGame.board.findSquare(newPlayerPos).isProperty()){
                                     Square square;
-                                    square = newGame.board.findSquare(newPlayerPos);
+                                    square = loadedGame.board.findSquare(newPlayerPos);
                                     int rent = square.getRent();
                                     int price = square.getPrice();
                                     Player owner;
@@ -520,7 +526,7 @@ public class Controller {
                                                 int moneyBeforeEnd = player.getMoney();
                                                 player.deductMoney(rent, "Rent");
                                                 owner.addMoney(player.getMoney());
-                                                newGame.endPlayer(player);
+                                                loadedGame.endPlayer(player);
                                             }
                                         }
 
@@ -548,11 +554,11 @@ public class Controller {
 
 
                             }
-                            newGame.setGameRound(newGame.getGameRound() + 1);
+                            loadedGame.setGameRound(loadedGame.getGameRound() + 1);
                         }
 
 
-                    }while(!isVaildForSaveInput(input) || !recordsList.get(chosenRecordNo-1).isWritten());
+                    }while(!isVaildForSaveInput(input));
 
                     break;
 
@@ -620,44 +626,100 @@ public class Controller {
         System.out.println("Invalid input, please try again.");
     }
 
-    public void printRecords() {
-        System.out.println("***\t\tGAME RECORDS\t\t***");
-        System.out.printf("%-25s %-25s %-25s %-25s %-25s\n", "Record 1", "Record 2", "Record 3", "Record 4", "Record 5");
 
-
-        for (int i = 0; i < 5; i++) {
-            if (recordsList.get(i).isWritten()) {
-                System.out.printf("%-25s ", recordsList.get(i).getName());
-            } else {
-                System.out.printf(ANSI_GREEN + "%-25s " + ANSI_RESET, recordsList.get(i).getName());
+    public void printRecords(){
+        File recordsDir = new File(".\\game records\\");
+        File[] directoryListing = recordsDir.listFiles();
+        ArrayList<File> gameRecords = new ArrayList<>();
+        if (directoryListing!=null) {
+            for (File file : directoryListing) {
+                if (file.getName().endsWith(".ser"))
+                    gameRecords.add(file);
             }
 
-        }
-        System.out.println(" ");
-        for (int i = 0; i < 5; i++) {
-            if (recordsList.get(i).isWritten()) {
-                System.out.printf("%-25s ", recordsList.get(i).getTimestamp().toString());
+            System.out.println("\n***\t\tGAME RECORDS\t\t***\t(5 RECORDS MAXIMUM)");
+            for (int i =0;i<gameRecords.size();i++){
+                String name = gameRecords.get(i).getName();
+                long time = gameRecords.get(i).lastModified();
+                Date date = new Date(time);
+                System.out.println(
+                        i+1 + ". \t Name: " + name +
+                        "  \t Created Time: " + date);
             }
+        }else{
+            System.out.println("There is no record saved.");
         }
-
-        System.out.println(" \n");
-        System.out.printf("%-25s %-25s %-25s %-25s %-25s\n", "Record 6", "Record 7", "Record 8", "Record 9", "Record 10");
-        for (int i = 5; i < 10; i++) {
-            if (recordsList.get(i).isWritten()) {
-                System.out.printf("%-25s ", recordsList.get(i).getName());
-            } else {
-                System.out.printf(ANSI_GREEN + "%-25s " + ANSI_RESET, recordsList.get(i).getName());
-            }
-        }
-        System.out.println(" ");
-        for (int i = 5; i < 10; i++) {
-            if (recordsList.get(i).isWritten()) {
-                System.out.printf("%-25s ", recordsList.get(i).getTimestamp().toString());
-            }
-        }
-        System.out.println(" \n");
-
     }
+
+    public boolean isUniqueNameRecords(String name){
+        File recordsDir = new File(".\\game records\\");
+        File[] directoryListing = recordsDir.listFiles();
+        boolean ret = true;
+        if (directoryListing!=null) {
+            for (File file : directoryListing) {
+                if (file.getName().equals(name+".ser"))
+                    ret = false;
+            }
+
+        }
+        return ret;
+    }
+
+    public int countRecords(){
+        File recordsDir = new File(".\\game records\\");
+        File[] directoryListing = recordsDir.listFiles();
+        if (directoryListing!=null) {
+            return directoryListing.length;
+        }else
+            return 0;
+    }
+
+    public void deleteRecords(int number){
+        File recordsDir = new File(".\\game records\\");
+        File[] directoryListing = recordsDir.listFiles();
+        if (directoryListing!=null) {
+            for (int i=0; i<directoryListing.length;i++) {
+                if (i == (number-1))
+                    if(directoryListing[i].delete())
+                        System.out.println("The selected record is deleted.");
+            }
+        }
+    }
+
+    public void deleteRecords(String name){
+        File recordsDir = new File(".\\game records\\");
+        File[] directoryListing = recordsDir.listFiles();
+        if (directoryListing!=null) {
+            for (File file : directoryListing) {
+                if (file.getName().equals(name+".ser")) {
+                    if (file.delete())
+                        System.out.println("The selected record is deleted.");
+                }
+            }
+        }
+    }
+
+    public String findRecords(int number){
+        File recordsDir = new File(".\\game records\\");
+        File[] directoryListing = recordsDir.listFiles();
+        String ret ="";
+        if (directoryListing!=null) {
+            for (int i=0; i<directoryListing.length;i++) {
+                if (i == (number-1))
+                    ret = directoryListing[i].getName().replace(".ser","");
+            }
+        }
+        return ret;
+    }
+
+    public boolean isExistDir(String name){
+        File dir = new File(".\\"+ name);
+        if (dir.exists())
+            return true;
+        else
+            return false;
+    }
+
 
     public void printLoadGameOption(){
         System.out.println("***\t\tLOAD OPTION\t\t***" +
@@ -672,10 +734,43 @@ public class Controller {
 
     public boolean isVaildForSaveInput(String input){
         if (isNumeric(input)){
-            return  Integer.parseInt(input)>=1 && Integer.parseInt(input)<=10;
+            return  Integer.parseInt(input)>=1 && Integer.parseInt(input)<=countRecords();
         }else
             return false;
     }
+
+    public void saveGame(String name, Game game, Player player) {
+        GameRecord recordToSave = new GameRecord(name, game, player);
+        try{
+            FileOutputStream fos = new FileOutputStream(".\\game records\\"+name+".ser");
+            ObjectOutputStream out =new ObjectOutputStream(fos);
+            out.writeObject(recordToSave);
+            out.close();
+            fos.close();
+            System.out.println("File saved successfully");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public GameRecord loadGame(String fileName){
+        GameRecord recordToLoad = new GameRecord();
+        try{
+            FileInputStream fis = new FileInputStream(".\\game records\\"+fileName+".ser");
+            ObjectInputStream in =new ObjectInputStream(fis);
+            recordToLoad = (GameRecord)in.readObject();
+            in.close();
+            fis.close();
+            System.out.println(fileName+".ser loaded successfully.");
+        } catch (IOException | ClassNotFoundException e) {
+            printInvalidMsg();
+            return null;
+        }
+
+        return recordToLoad;
+    }
+
+
 
 
 

@@ -1,4 +1,6 @@
-public class Property extends Square{
+import java.io.Serializable;
+
+public class Property extends Square implements Serializable {
 
     public Property(int pos, String name, int price, int rent) {
         this.pos = pos;

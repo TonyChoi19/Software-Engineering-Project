@@ -1,8 +1,9 @@
 import sun.plugin2.message.GetAppletMessage;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
-public class GameRecord
+public class GameRecord implements Serializable
 {
     private String name;
     private Game game;
