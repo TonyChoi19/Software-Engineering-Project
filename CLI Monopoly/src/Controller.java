@@ -1,10 +1,4 @@
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
-
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -26,7 +20,7 @@ public class Controller {
         Welcome welcome = new Welcome();
         welcome. playWelcome();
 
-        String input = null;
+        String input;
 
         do {
             printMainMenu();
@@ -47,7 +41,7 @@ public class Controller {
 
                     while(game.getGameRound() <=100 && game.playersList.size() != 1){
                         for( Player player : game.playersList ){
-                            System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
+                            System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
 
                             int step=0;
 
@@ -111,7 +105,7 @@ public class Controller {
                                     }
 
                                 } else if (input.equals("2")) {
-                                    System.out.println("\nRound " + game.getGameRound() + "\t " + player.getName() + "'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")" + "\t Balacne(HKD):" + player.getMoney());
+                                    System.out.println("\nRound " + game.getGameRound() + "\t " + player.getName() + "'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")" + "\t Balance(HKD):" + player.getMoney());
                                     System.out.println("Your property:");
                                     if (player.getProperties().isEmpty())
                                         System.out.println("NONE");
@@ -131,11 +125,11 @@ public class Controller {
                                         input = scanInput();
                                         if (input.equals("1"))
                                             break;
-                                        if (input.equals("2")) {
+                                        if (input.equals("2"))
                                             break;
-                                        } else
+                                        else
                                             printInvalidMsg();
-                                    } while (!input.equals("1") && !input.equals("2"));
+                                    } while (true);
 
                                     if (input.equals("2")) {
                                         repeatMenuFlag = true;
@@ -154,20 +148,18 @@ public class Controller {
                                     String recordName = input;
                                     if (isUniqueNameRecords(recordName) && countRecords()<5){
                                         saveGame(recordName, game, player);
-                                        repeatMenuFlag = true;
                                     }
                                     else{
                                         if (countRecords()==5){
                                             do {
                                                 System.out.println("Please choose one record to overwrite." );
                                                 input = scanInput();
-                                                if (!isVaildForSaveInput(input))
+                                                if (!isValidForSaveInput(input))
                                                     printInvalidMsg();
-                                            }while(!isVaildForSaveInput(input));
+                                            }while(!isValidForSaveInput(input));
 
                                             deleteRecords(Integer.parseInt(input));
                                             saveGame(recordName, game, player);
-                                            repeatMenuFlag = true;
                                         }else{
                                             do {
                                                 System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
@@ -179,13 +171,11 @@ public class Controller {
                                             if (input.toUpperCase().equals("Y")){
                                                 deleteRecords(recordName);
                                                 saveGame(recordName, game, player);
-                                                repeatMenuFlag = true;
-                                            }else{
-                                                repeatMenuFlag = true;
                                             }
                                         }
 
                                     }
+                                    repeatMenuFlag = true;
 
 
                                 } else if (input.equals("5")) {
@@ -288,11 +278,20 @@ public class Controller {
 
                 case "2":
                     printRecords();
-                    int chosenRecordNo=1;
+
+                    File gameRecordsDir = new File(".\\game records");
+                    if (!gameRecordsDir.exists() || countRecords()==0){
+                        input = "999";
+                        break;
+                    }
+
+                    int chosenRecordNo;
                     do {
-                        System.out.println("Which record would you want to load?");
+                        System.out.println("Which record would you want to load? (Type \"back\" to return)");
                         input = scanInput();
-                        if (!isVaildForSaveInput(input)){
+                        if (!isValidForSaveInput(input)){
+                            if (input.toUpperCase().equals("BACK"))
+                                break;
                             printInvalidMsg();
                             continue;
                         }
@@ -313,7 +312,7 @@ public class Controller {
                                 else
                                     playerFoundInFirstRound = true;
 
-                                System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
+                                System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
 
                                 int step=0;
 
@@ -381,7 +380,7 @@ public class Controller {
 
 
                                     else if (input.equals("2")){
-                                        System.out.println("\nRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balacne(HKD):" + player.getMoney());
+                                        System.out.println("\nRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney());
                                         System.out.println("Your property:");
                                         if (player.getProperties().isEmpty())
                                             System.out.println("NONE");
@@ -404,11 +403,11 @@ public class Controller {
                                             input = scanInput();
                                             if (input.equals("1"))
                                                 break;
-                                            if (input.equals("2")) {
+                                            else if (input.equals("2"))
                                                 break;
-                                            } else
+                                             else
                                                 printInvalidMsg();
-                                        } while (!input.equals("1") && !input.equals("2"));
+                                        } while (true);
 
                                         if (input.equals("2")) {
                                             repeatMenuFlag = true;
@@ -426,20 +425,18 @@ public class Controller {
                                         String recordName = input;
                                         if (isUniqueNameRecords(recordName) && countRecords()<5){
                                             saveGame(recordName, loadedGame, player);
-                                            repeatMenuFlag = true;
                                         }
                                         else{
                                             if (countRecords()==5){
                                                 do {
                                                     System.out.println("Please choose one record to overwrite." );
                                                     input = scanInput();
-                                                    if (!isVaildForSaveInput(input))
+                                                    if (!isValidForSaveInput(input))
                                                         printInvalidMsg();
-                                                }while(!isVaildForSaveInput(input));
+                                                }while(!isValidForSaveInput(input));
 
                                                 deleteRecords(Integer.parseInt(input));
                                                 saveGame(recordName, loadedGame, player);
-                                                repeatMenuFlag = true;
                                             }else{
                                                 do {
                                                     System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
@@ -451,13 +448,11 @@ public class Controller {
                                                 if (input.toUpperCase().equals("Y")){
                                                     deleteRecords(recordName);
                                                     saveGame(recordName, loadedGame, player);
-                                                    repeatMenuFlag = true;
-                                                }else{
-                                                    repeatMenuFlag = true;
                                                 }
                                             }
 
                                         }
+                                        repeatMenuFlag = true;
 
 
                                     } else if (input.equals("5")) {
@@ -558,11 +553,31 @@ public class Controller {
                         }
 
 
-                    }while(!isVaildForSaveInput(input));
+                    }while(!isValidForSaveInput(input));
 
                     break;
 
                 case "3":
+                    printRecords();
+                    File directory = new File(".\\game records");
+                    if (directory.exists() && countRecords()!=0){
+                        do {
+                            System.out.println("\nWhich record would you like to delete? (Type \"back\" to return)");
+                            input = scanInput();
+                            if (isValidForSaveInput(input)) {
+                                deleteRecords(Integer.parseInt(input));
+                                break;
+                            }else if(input.toUpperCase().equals("BACK")){
+                                break;
+                            }else{
+                                printInvalidMsg();
+                            }
+                        }while (!isValidForSaveInput(input));
+                    }
+                    input = "999";
+                    break;
+
+                case "4":
                     end();
                     break;
 
@@ -570,7 +585,7 @@ public class Controller {
                     System.out.println("Sorry, please enter the correct number.");
                     break;
             }
-        }while(!input.equals("1") && !input.equals("2") && !input.equals("3") );
+        }while(!input.equals("1") && !input.equals("2") && !input.equals("3") && !input.equals("4") );
 
     }
 
@@ -601,7 +616,8 @@ public class Controller {
         System.out.println("\n***\t\tGAME MENU\t\t***" +
                 "\n1. \t NEW GAME" +
                 "\n2. \t LOAD GAME" +
-                "\n3. \t EXIT" +
+                "\n3. \t MANAGE GAME RECORDS" +
+                "\n4. \t EXIT" +
                 "\nPlease enter the number to choose");
     }
 
@@ -631,7 +647,8 @@ public class Controller {
         File recordsDir = new File(".\\game records\\");
         File[] directoryListing = recordsDir.listFiles();
         ArrayList<File> gameRecords = new ArrayList<>();
-        if (directoryListing!=null) {
+
+        if (directoryListing!=null && directoryListing.length!=0) {
             for (File file : directoryListing) {
                 if (file.getName().endsWith(".ser"))
                     gameRecords.add(file);
@@ -647,7 +664,7 @@ public class Controller {
                         "  \t Created Time: " + date);
             }
         }else{
-            System.out.println("There is no record saved.");
+            System.out.println("You don't have any game records yet.");
         }
     }
 
@@ -712,27 +729,18 @@ public class Controller {
         return ret;
     }
 
-    public boolean isExistDir(String name){
-        File dir = new File(".\\"+ name);
-        if (dir.exists())
-            return true;
-        else
-            return false;
-    }
-
-
-    public void printLoadGameOption(){
-        System.out.println("***\t\tLOAD OPTION\t\t***" +
-                "\n1. \t Load record" +
-                "\n2. \t Back" +
-                "\nPlease enter the number to choose");
-    }
+//    public void printLoadGameOption(){
+//        System.out.println("***\t\tLOAD OPTION\t\t***" +
+//                "\n1. \t Load record" +
+//                "\n2. \t Back" +
+//                "\nPlease enter the number to choose");
+//    }
 
     public boolean isNumeric(String input){
         return input != null && input.matches("[0-9.]+");
     }
 
-    public boolean isVaildForSaveInput(String input){
+    public boolean isValidForSaveInput(String input){
         if (isNumeric(input)){
             return  Integer.parseInt(input)>=1 && Integer.parseInt(input)<=countRecords();
         }else
@@ -754,7 +762,7 @@ public class Controller {
     }
 
     public GameRecord loadGame(String fileName){
-        GameRecord recordToLoad = new GameRecord();
+        GameRecord recordToLoad;
         try{
             FileInputStream fis = new FileInputStream(".\\game records\\"+fileName+".ser");
             ObjectInputStream in =new ObjectInputStream(fis);
