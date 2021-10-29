@@ -36,15 +36,15 @@ public class Dice implements Serializable {
     }
 
     public int throwDice(){
-        die1 = (int) (1+ Math.floor(Math.random()*6));
-        die2 = (int) (1+ Math.floor(Math.random()*6));
+        die1 = (int) (1+ Math.floor(Math.random()*4));
+        die2 = (int) (1+ Math.floor(Math.random()*4));
         this.isDouble = die1 == die2;
         return (die1 + die2);
     }
 
     public void printValue(){
         System.out.println("The value of die 1 is :" + this.die1);
-        System.out.println("The value of die 2 is :" + this.die2 +"\n");
+        System.out.println("The value of die 2 is :" + this.die2);
     }
 
 

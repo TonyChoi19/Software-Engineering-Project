@@ -64,21 +64,24 @@ public class Player implements Serializable {
         if (this.pos + step > 20){
             this.pos += step - 20;
             this.money+=1500;
-            System.out.println("You have received HKD1500 salary.");
+            System.out.println("\nYou have received HKD1500 salary.");
         }else
             this.pos += step;
     }
 
     public void freeProperty(){
+        System.out.println("\n\u001B[31mYou have lost due to negative balance ($" + this.getMoney() + ")" +
+                "\nYour propoties will be automatically free.\u001B[0m");
+
         if (this.properties.isEmpty())
-            System.out.println("Freed Properties: NONE");
+            System.out.println("\nFreed Properties: NONE");
         else{
-            System.out.println("Freed Properties:");
+            System.out.println("\nFreed Properties:");
             for (Square property : this.properties){
                 property.setOwner(null);
-                properties.remove(property);
                 System.out.println(property.name);
             }
+            properties = null;
         }
     }
 
@@ -106,9 +109,9 @@ public class Player implements Serializable {
         setInJail(false);
         setInJailCount(0);
         if (reason.equals("Fine"))
-            System.out.println("Fine paid, you are now free to go.");
+            System.out.println("\nFine paid, you are now free to go.");
         if (reason.equals("Double"))
-            System.out.println("Congrats! It is a double. You are now free to go.");
+            System.out.println("\nCongrats! It is a double. You are now free to go.");
     }
 
     public boolean isHaveChoicePayJail(){

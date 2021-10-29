@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Random;
 
 public class Controller {
@@ -33,15 +34,19 @@ public class Controller {
                     do {
                         System.out.println("\nPlease enter the number of players: (Minimum=2, Maximum=6)");
                         input = scanInput();
-                        if (Integer.parseInt(input) < 2 || Integer.parseInt(input) > 6)
+                        if (Integer.parseInt(input) < 2 || Integer.parseInt(input) > 6) {
                             printInvalidMsg();
-                    } while (Integer.parseInt(input) < 2 || Integer.parseInt(input) > 6);
+                        }else
+                            break;
+                    } while (true);
 
                     Game game = new Game(Integer.parseInt(input));
 
-                    while(game.getGameRound() <=100 && game.playersList.size() != 1){
-                        for( Player player : game.playersList ){
-                            System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
+                    while(game.getGameRound() <=100 && game.getPlayersList().size() != 1){
+                        Iterator<Player> it = game.getPlayersList().iterator();
+                        while( it.hasNext()){
+                            Player player = it.next();
+                            System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET);
 
                             int step=0;
 
@@ -95,7 +100,7 @@ public class Controller {
                                             } else {
                                                 System.out.println("You do not have enough money.");
                                                 player.deductMoney(150, "Fine");
-                                                game.endPlayer(player);
+                                                player.freeProperty();
                                             }
                                         }
                                     }
@@ -115,7 +120,7 @@ public class Controller {
                                             System.out.printf("%-5s %-20s %-8s %-8s\n", property.getPos(), property.getName(), property.getPrice(), property.getRent());
                                         }
                                     }
-                                    System.out.println(" ");
+
                                 } else if (input.equals("3")) {
                                     game.board.printBoard();
                                 } else if (input.equals("4")) {
@@ -200,7 +205,7 @@ public class Controller {
                                 int tax;
                                 tax = (int) ((player.getMoney()*0.01/10)*10);
                                 System.out.println("You have to pay income tax for 10% of your money. (HKD"+ tax + ")");
-                                player.deductMoney(tax, "Tax");
+                                player.deductMoney(Math.abs(tax), "Tax");
                             }
 
                             if (game.board.findSquare(newPlayerPos).getName().equals("Chance")){
@@ -209,16 +214,18 @@ public class Controller {
                                 while(rand==0) {
                                     rand = (random.nextInt(200 + 300) - 300) / 10 * 10;
                                 }
-                                if (rand > 0)
+                                if (rand > 0){
                                     System.out.println("You won a bonus of HKD"+ rand);
+                                    player.addMoney(rand);
+                                }
                                 else {
-                                    System.out.println("You lost HKD" + rand);
-                                    if (player.isEnoughMoneyToPay(rand)){
-                                        player.deductMoney(rand, "Fee");
+                                    System.out.println("You lost HKD" + Math.abs(rand));
+                                    if (player.isEnoughMoneyToPay(Math.abs(rand))){
+                                        player.deductMoney(Math.abs(rand), "Fee");
                                     }else{
                                         System.out.println("You do not have enough money.");
-                                        player.deductMoney(rand, "Fee");
-                                        game.endPlayer(player);
+                                        player.deductMoney(Math.abs(rand), "Fee");
+                                        player.freeProperty();
                                     }
                                 }
                             }
@@ -236,15 +243,15 @@ public class Controller {
                                     if (player!=owner ){
                                         System.out.println("You have to pay for the rent HKD" + rent);
                                         if (player.isEnoughMoneyToPay(rent)){
-                                            player.deductMoney(rent, "Rent");
+                                            player.deductMoney(Math.abs(rent), "Rent");
                                             owner.addMoney(rent);
                                         }else{
-                                            System.out.println("You do not have enough money.");
+                                            System.out.println("\nYou do not have enough money.");
                                             System.out.println("The landlord will take over all your remaining money.");
-                                            int moneyBeforeEnd = player.getMoney();
-                                            player.deductMoney(rent, "Rent");
-                                            owner.addMoney(player.getMoney());
-                                            game.endPlayer(player);
+                                            player.setMoney(player.getMoney() - Math.abs(rent));
+                                            owner.addMoney(player.getMoney()+Math.abs(rent));
+                                            player.freeProperty();
+                                            it.remove();
                                         }
                                     }
 
@@ -267,12 +274,26 @@ public class Controller {
                                         }
                                     } while (!input.equals("1") && !input.equals("2"));
                                 }
-                                System.out.println();
+
                             }
 
 
                         }
                         game.setGameRound(game.getGameRound() + 1);
+                    }
+
+                    if (game.getGameRound()>100 || game.getPlayersList().size() == 1){
+                        if (game.getPlayersList().size() == 1)
+                            System.out.println("\n"+ANSI_GREEN+game.getPlayersList().get(0).getName()+" is the winner!!!"+ANSI_RESET);
+                        else{
+                            System.out.println("\n"+ANSI_GREEN+"Tie!!!");
+                            for (Player player : game.getPlayersList()){
+                                System.out.print(player.getName()+" ");
+                            }
+                            System.out.println("are the winners!!!\n"+ANSI_RESET);
+                        }
+                        input = "999";
+                        break;
                     }
                     break;
 
@@ -287,7 +308,7 @@ public class Controller {
 
                     int chosenRecordNo;
                     do {
-                        System.out.println("Which record would you want to load? (Type \"back\" to return)");
+                        System.out.println("\nWhich record would you want to load? (Type \"back\" to return)");
                         input = scanInput();
                         if (!isValidForSaveInput(input)){
                             if (input.toUpperCase().equals("BACK"))
@@ -304,15 +325,17 @@ public class Controller {
                         loadedGameRound = loadedGame.getGameRound();
                         boolean playerFoundInFirstRound = false;
 
-                        while(loadedGame.getGameRound() <=100 && loadedGame.playersList.size() != 1){
-                            for( Player player : loadedGame.playersList ){
+                        while(loadedGame.getGameRound() <=100 && loadedGame.getPlayersList().size() != 1){
+                            Iterator<Player> it = loadedGame.getPlayersList().iterator();
+                            while( it.hasNext()){
+                                Player player = it.next();
                                 if (player!=loadedGameRecord.getPlayerTurn() && loadedGame.getGameRound()==loadedGameRound && !playerFoundInFirstRound){
                                     continue;
                                 }
                                 else
                                     playerFoundInFirstRound = true;
 
-                                System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET +"\n");
+                                System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET);
 
                                 int step=0;
 
@@ -367,7 +390,7 @@ public class Controller {
                                                 }else{
                                                     System.out.println("You do not have enough money.");
                                                     player.deductMoney(150, "Fine");
-                                                    loadedGame.endPlayer(player);
+                                                    player.freeProperty();
                                                 }
                                             }
                                         }
@@ -390,7 +413,7 @@ public class Controller {
                                                 System.out.printf("%-5s %-20s %-8s %-8s\n",property.getPos(),property.getName(), property.getPrice(), property.getRent());
                                             }
                                         }
-                                        System.out.println(" ");
+
                                     }
                                     else if (input.equals("3")){
                                         loadedGame.board.printBoard();
@@ -477,7 +500,7 @@ public class Controller {
                                     int tax;
                                     tax = (int) ((player.getMoney()*0.01/10)*10);
                                     System.out.println("You have to pay income tax for 10% of your money. (HKD"+ tax + ")");
-                                    player.deductMoney(tax, "Tax");
+                                    player.deductMoney(Math.abs(tax), "Tax");
                                 }
 
                                 if (loadedGame.board.findSquare(newPlayerPos).getName().equals("Chance")){
@@ -486,16 +509,18 @@ public class Controller {
                                     while(rand==0) {
                                         rand = (random.nextInt(200 + 300) - 300) / 10 * 10;
                                     }
-                                    if (rand > 0)
+                                    if (rand > 0){
                                         System.out.println("You won a bonus of HKD"+ rand);
+                                        player.addMoney(rand);
+                                    }
                                     else {
-                                        System.out.println("You lost HKD" + rand);
-                                        if (player.isEnoughMoneyToPay(rand)){
-                                            player.deductMoney(rand, "Fee");
+                                        System.out.println("You lost HKD" + Math.abs(rand));
+                                        if (player.isEnoughMoneyToPay(Math.abs(rand))){
+                                            player.deductMoney(Math.abs(rand), "Fee");
                                         }else{
                                             System.out.println("You do not have enough money.");
-                                            player.deductMoney(rand, "Fee");
-                                            loadedGame.endPlayer(player);
+                                            player.deductMoney(Math.abs(rand), "Fee");
+                                            player.freeProperty();
                                         }
                                     }
                                 }
@@ -512,16 +537,17 @@ public class Controller {
                                         /* The property does not belong to current player */
                                         if (player!=owner ){
                                             System.out.println("You have to pay for the rent HKD" + rent);
-                                            if (player.isEnoughMoneyToPay(rent)){
-                                                player.deductMoney(rent, "Rent");
-                                                owner.addMoney(rent);
+                                            if (player.isEnoughMoneyToPay(Math.abs(rent))){
+                                                player.deductMoney(Math.abs(rent), "Rent");
+                                                owner.addMoney(Math.abs(rent));
                                             }else{
-                                                System.out.println("You do not have enough money.");
+                                                System.out.println("\nYou do not have enough money.");
                                                 System.out.println("The landlord will take over all your remaining money.");
                                                 int moneyBeforeEnd = player.getMoney();
-                                                player.deductMoney(rent, "Rent");
-                                                owner.addMoney(player.getMoney());
-                                                loadedGame.endPlayer(player);
+                                                player.setMoney(player.getMoney() - Math.abs(rent));
+                                                owner.addMoney(player.getMoney()+Math.abs(rent));
+                                                player.freeProperty();
+                                                it.remove();
                                             }
                                         }
 
@@ -544,12 +570,23 @@ public class Controller {
                                             }
                                         } while (!input.equals("1") && !input.equals("2"));
                                     }
-                                    System.out.println();
                                 }
-
 
                             }
                             loadedGame.setGameRound(loadedGame.getGameRound() + 1);
+                        }
+
+                        if (loadedGame.getGameRound()>100 || loadedGame.getPlayersList().size() == 1){
+                            if (loadedGame.getPlayersList().size() == 1)
+                                System.out.println("\n"+ANSI_GREEN+loadedGame.getPlayersList().get(0).getName()+" is the winner!!!"+ANSI_RESET);
+                            else{
+                                System.out.println("\n"+ANSI_GREEN+"Tie!!!");
+                                for (Player player : loadedGame.getPlayersList()){
+                                    System.out.print(player.getName()+" ");
+                                }
+                                System.out.println("are the winners!!!\n"+ANSI_RESET);
+                            }
+                            input = "999";
                         }
 
 
@@ -622,7 +659,7 @@ public class Controller {
     }
 
     public void printMainGameOption(){
-        System.out.println("***\t\tGAME OPTION\t\t***" +
+        System.out.println("\n***\t\tGAME OPTION\t\t***" +
                 "\n1. \t Throw the dice" +
                 "\n2. \t Check status" +
                 "\n3. \t Print Board" +
@@ -632,7 +669,7 @@ public class Controller {
     }
 
     public void printSaveGameOption(){
-        System.out.println("***\t\tSAVE OPTION\t\t***" +
+        System.out.println("\n***\t\tSAVE OPTION\t\t***" +
                 "\n1. \t Save record" +
                 "\n2. \t Back" +
                 "\nPlease enter the number to choose");
