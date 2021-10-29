@@ -42,6 +42,8 @@ public class Controller {
 
                     Game game = new Game(Integer.parseInt(input));
 
+
+
                     while(game.getGameRound() <=100 && game.getPlayersList().size() != 1){
                         Iterator<Player> it = game.getPlayersList().iterator();
                         while( it.hasNext()){
@@ -282,11 +284,11 @@ public class Controller {
                         game.setGameRound(game.getGameRound() + 1);
                     }
 
-                    if (game.getGameRound()>100 || game.getPlayersList().size() == 1){
+                    if (game.getGameRound()==100 || game.getPlayersList().size() == 1){
                         if (game.getPlayersList().size() == 1)
-                            System.out.println("\n"+ANSI_GREEN+game.getPlayersList().get(0).getName()+" is the winner!!!"+ANSI_RESET);
+                            System.out.println("\n"+ANSI_GREEN+"####\t\t"+game.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+ANSI_RESET);
                         else{
-                            System.out.println("\n"+ANSI_GREEN+"Tie!!!");
+                            System.out.println("\n"+ANSI_GREEN+"####\t\tTie!!!\t\t####");
                             for (Player player : game.getPlayersList()){
                                 System.out.print(player.getName()+" ");
                             }
@@ -576,17 +578,18 @@ public class Controller {
                             loadedGame.setGameRound(loadedGame.getGameRound() + 1);
                         }
 
-                        if (loadedGame.getGameRound()>100 || loadedGame.getPlayersList().size() == 1){
+                        if (loadedGame.getGameRound()==100 || loadedGame.getPlayersList().size() == 1){
                             if (loadedGame.getPlayersList().size() == 1)
-                                System.out.println("\n"+ANSI_GREEN+loadedGame.getPlayersList().get(0).getName()+" is the winner!!!"+ANSI_RESET);
+                                System.out.println("\n"+ANSI_GREEN+"####\t\t"+loadedGame.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+ANSI_RESET);
                             else{
-                                System.out.println("\n"+ANSI_GREEN+"Tie!!!");
+                                System.out.println("\n"+ANSI_GREEN+"####\t\tTie!!!\t\t####");
                                 for (Player player : loadedGame.getPlayersList()){
                                     System.out.print(player.getName()+" ");
                                 }
                                 System.out.println("are the winners!!!\n"+ANSI_RESET);
                             }
                             input = "999";
+                            break;
                         }
 
 
