@@ -445,7 +445,6 @@ public class Controller {
                                     }
                                     else if (input.equals("4")){
                                         //Save record
-
                                         do {
                                             printSaveGameOption();
                                             input = scanInput();
