@@ -5,9 +5,11 @@ import java.util.Iterator;
 import java.util.Random;
 
 public class Controller {
+    //For reading input
     private InputStreamReader isr;
     private BufferedReader br;
 
+    //For color of text
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_YELLOW = "\u001B[33m";
@@ -18,6 +20,7 @@ public class Controller {
     }
 
     public void start() throws InterruptedException {
+        //Play styled game intro
         Welcome welcome = new Welcome();
         welcome. playWelcome();
 
@@ -31,6 +34,7 @@ public class Controller {
             switch (input) {
                 /* NEW GAME */
                 case "1":
+                    /* Set the number of players for new game */
                     do {
                         System.out.println("\nPlease enter the number of players: (Minimum=2, Maximum=6)");
                         input = scanInput();
@@ -40,10 +44,10 @@ public class Controller {
                             break;
                     } while (true);
 
+
                     Game game = new Game(Integer.parseInt(input));
 
-
-
+                    /* Loop until the game rpund has reached 100 / only one player left */
                     while(game.getGameRound() <=100 && game.getPlayersList().size() != 1){
                         Iterator<Player> it = game.getPlayersList().iterator();
                         while( it.hasNext()){
@@ -80,8 +84,8 @@ public class Controller {
                                 printMainGameOption();
                                 input = scanInput();
 
+                                /* Throw the dice */
                                 if (input.equals("1")) {
-                                    /* player throws dice */
                                     step = game.dice.throwDice();
                                     game.dice.printValue();
 
@@ -93,7 +97,7 @@ public class Controller {
                                         if (player.isHaveChoicePayJail()) {
                                             player.setInJailCount(player.getInJailCount() + 1);
                                         }
-                                        /* player in jail (third turn) doesn't throw a double */
+                                        /* player in jail (third turn) doesn't throw a double --> must to pay the fine */
                                         if (player.isInJail() && player.getInJailCount() == 3) {
                                             System.out.println("This is your third turn in jail. You have to pay HKD150 to get out of jail.");
                                             if (player.isEnoughMoneyToPay(150)) {
@@ -110,7 +114,7 @@ public class Controller {
                                     if (!player.isInJail()) {
                                         player.move(step);
                                     }
-
+                                /* Check all the info of the player */
                                 } else if (input.equals("2")) {
                                     System.out.println("\nRound " + game.getGameRound() + "\t " + player.getName() + "'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")" + "\t Balance(HKD):" + player.getMoney());
                                     System.out.println("Your property:");
@@ -123,10 +127,12 @@ public class Controller {
                                         }
                                     }
 
+                                /* Print the details of the board */
                                 } else if (input.equals("3")) {
                                     game.board.printBoard();
+
+                                /* Save a record */
                                 } else if (input.equals("4")) {
-                                    //Save record
                                     do {
                                         printSaveGameOption();
                                         input = scanInput();
@@ -185,6 +191,7 @@ public class Controller {
                                     repeatMenuFlag = true;
 
 
+                                /* Back to main menu */
                                 } else if (input.equals("5")) {
                                     break outerLoop;
                                 } else
@@ -195,7 +202,14 @@ public class Controller {
                             /* print player's pos after moving */
                             game.printDetailedPos(player.getPos());
 
-                            /* move to next point */
+
+                            /*
+                            After the move
+                             */
+
+
+                            /* Move to next position
+                            * Do the action due to the new position */
                             int newPlayerPos = player.getPos();
                             if (game.board.findSquare(newPlayerPos).getName().equals("Go to Jail")){
                                 System.out.println("You are going to jail(6).");
@@ -257,7 +271,8 @@ public class Controller {
                                         }
                                     }
 
-                                }else{  /* The property is available */
+                                }else{
+                                    /* The property is available */
                                     do {
                                         System.out.println("Do you want to buy this property for HKD" + price +
                                                 "\n1 : Purchase" +
@@ -284,6 +299,7 @@ public class Controller {
                         game.setGameRound(game.getGameRound() + 1);
                     }
 
+                    /* announce game result when game ends */
                     if (game.getGameRound()==100 || game.getPlayersList().size() == 1){
                         if (game.getPlayersList().size() == 1)
                             System.out.println("\n"+ANSI_GREEN+"####\t\t"+game.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+ANSI_RESET);
@@ -299,15 +315,22 @@ public class Controller {
                     }
                     break;
 
+
+
+
+                /* Load game records */
                 case "2":
                     printRecords();
 
+                    /* Directory not found */
                     File gameRecordsDir = new File(".\\game records");
                     if (!gameRecordsDir.exists() || countRecords()==0){
                         input = "999";
                         break;
                     }
 
+
+                    /* Load record and start playing */
                     int chosenRecordNo;
                     do {
                         System.out.println("\nWhich record would you want to load? (Type \"back\" to return)");
@@ -597,6 +620,10 @@ public class Controller {
 
                     break;
 
+
+
+                /* Manage game records
+                * (View and delete) */
                 case "3":
                     printRecords();
                     File directory = new File(".\\game records");
@@ -629,14 +656,23 @@ public class Controller {
 
     }
 
+
+    /**
+     * Play "Thank you" and close application
+     */
     public void end(){
         System.out.println("*** \tThank you for playing. Bye Bye! \t***");
         System.exit(0);
     }
 
-    /* read next line (user's input) */
+
+    /**
+     * Read next line (user's input)
+     *
+     * @return  input   the string of player's input
+     */
     public String scanInput(){
-        inputField();
+        System.out.print(ANSI_GREEN + "-> " +ANSI_RESET);
         String input = "";
         try{
             input = br.readLine();
@@ -646,12 +682,9 @@ public class Controller {
         return input;
     }
 
-    /* To place the user input */
-    public void inputField(){
-        /* coloring of the user input line */
-        System.out.print(ANSI_GREEN + "-> " +ANSI_RESET);
-    }
-
+    /**
+     * Display main menu
+     */
     public void printMainMenu(){
         System.out.println("\n***\t\tGAME MENU\t\t***" +
                 "\n1. \t NEW GAME" +
@@ -661,6 +694,9 @@ public class Controller {
                 "\nPlease enter the number to choose");
     }
 
+    /**
+     * Display game options
+     */
     public void printMainGameOption(){
         System.out.println("\n***\t\tGAME OPTION\t\t***" +
                 "\n1. \t Throw the dice" +
@@ -671,6 +707,9 @@ public class Controller {
                 "\nPlease enter the number to choose");
     }
 
+    /**
+     * Display save option  (To go back if player wants)
+     */
     public void printSaveGameOption(){
         System.out.println("\n***\t\tSAVE OPTION\t\t***" +
                 "\n1. \t Save record" +
@@ -678,11 +717,17 @@ public class Controller {
                 "\nPlease enter the number to choose");
     }
 
+    /**
+     * Display invalid message
+     */
     public void printInvalidMsg(){
         System.out.println("Invalid input, please try again.");
     }
 
 
+    /**
+     * Display saved game records
+     */
     public void printRecords(){
         File recordsDir = new File(".\\game records\\");
         File[] directoryListing = recordsDir.listFiles();
@@ -708,6 +753,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Distinguish the name if it is used
+     *
+     * @param name  the typed name for the record
+     * @return      True if unique, False if unique
+     */
     public boolean isUniqueNameRecords(String name){
         File recordsDir = new File(".\\game records\\");
         File[] directoryListing = recordsDir.listFiles();
@@ -722,6 +773,11 @@ public class Controller {
         return ret;
     }
 
+    /**
+     * Count the number of saved records
+     *
+     * @return the number of saved records
+     */
     public int countRecords(){
         File recordsDir = new File(".\\game records\\");
         File[] directoryListing = recordsDir.listFiles();
@@ -731,6 +787,12 @@ public class Controller {
             return 0;
     }
 
+
+    /**
+     * Delete saved record
+     *
+     * @param number    the number that represents the certain record
+     */
     public void deleteRecords(int number){
         File recordsDir = new File(".\\game records\\");
         File[] directoryListing = recordsDir.listFiles();
@@ -743,6 +805,11 @@ public class Controller {
         }
     }
 
+    /**
+     * Delete saved record
+     *
+     * @param name      the name of the record
+     */
     public void deleteRecords(String name){
         File recordsDir = new File(".\\game records\\");
         File[] directoryListing = recordsDir.listFiles();
@@ -756,6 +823,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Get the name of record by number
+     *
+     * @param number    the number that represents the certain record
+     * @return          the name of the record
+     */
     public String findRecords(int number){
         File recordsDir = new File(".\\game records\\");
         File[] directoryListing = recordsDir.listFiles();
@@ -769,17 +842,22 @@ public class Controller {
         return ret;
     }
 
-//    public void printLoadGameOption(){
-//        System.out.println("***\t\tLOAD OPTION\t\t***" +
-//                "\n1. \t Load record" +
-//                "\n2. \t Back" +
-//                "\nPlease enter the number to choose");
-//    }
-
+    /**
+     * Distinguish the input is numeric of not
+     *
+     * @param input     player's input
+     * @return          numeric --> true, not numeric --> false,
+     */
     public boolean isNumeric(String input){
         return input != null && input.matches("[0-9.]+");
     }
 
+    /**
+     * Distinguish the input is in the range of the records existed
+     *
+     * @param input     number
+     * @return          in the range --> true, not the range --> false
+     */
     public boolean isValidForSaveInput(String input){
         if (isNumeric(input)){
             return  Integer.parseInt(input)>=1 && Integer.parseInt(input)<=countRecords();
@@ -787,6 +865,13 @@ public class Controller {
             return false;
     }
 
+    /**
+     * Save a game record as a file
+     *
+     * @param name      the record name
+     * @param game      the game to be saved
+     * @param player    the turn of player
+     */
     public void saveGame(String name, Game game, Player player) {
         GameRecord recordToSave = new GameRecord(name, game, player);
         try{
@@ -801,6 +886,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Load a game record by the file name
+     *
+     * @param fileName      the name of the game record
+     * @return              the record to be loaded
+     */
     public GameRecord loadGame(String fileName){
         GameRecord recordToLoad;
         try{
