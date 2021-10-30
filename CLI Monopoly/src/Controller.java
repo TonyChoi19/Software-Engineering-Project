@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -9,17 +10,12 @@ public class Controller {
     private InputStreamReader isr;
     private BufferedReader br;
 
-    //For color of text
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-
     public Controller() {
         this.isr = new InputStreamReader(System.in);
         this.br = new BufferedReader(isr);
     }
 
-    public void start() throws InterruptedException {
+    public void start() throws InterruptedException, URISyntaxException {
         //Play styled game intro
         Welcome welcome = new Welcome();
         welcome. playWelcome();
@@ -52,7 +48,7 @@ public class Controller {
                         Iterator<Player> it = game.getPlayersList().iterator();
                         while( it.hasNext()){
                             Player player = it.next();
-                            System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET);
+                            System.out.println("\n"+Constant.ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ Constant.ANSI_RESET);
 
                             int step=0;
 
@@ -150,7 +146,9 @@ public class Controller {
                                     }
 
                                     printRecords();
-                                    File directory = new File(".\\game records");
+                                    String path = Constant.CWD+"game records";
+                                    File directory = new File(path);
+
                                     if (!directory.exists() && !directory.isDirectory())
                                         if (directory.mkdir())
                                             System.out.println("Directory for game record is created.");
@@ -302,13 +300,13 @@ public class Controller {
                     /* announce game result when game ends */
                     if (game.getGameRound()==100 || game.getPlayersList().size() == 1){
                         if (game.getPlayersList().size() == 1)
-                            System.out.println("\n"+ANSI_GREEN+"####\t\t"+game.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+ANSI_RESET);
+                            System.out.println("\n"+Constant.ANSI_GREEN+"####\t\t"+game.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+Constant.ANSI_RESET);
                         else{
-                            System.out.println("\n"+ANSI_GREEN+"####\t\tTie!!!\t\t####");
+                            System.out.println("\n"+Constant.ANSI_GREEN+"####\t\tTie!!!\t\t####");
                             for (Player player : game.getPlayersList()){
                                 System.out.print(player.getName()+" ");
                             }
-                            System.out.println("are the winners!!!\n"+ANSI_RESET);
+                            System.out.println("are the winners!!!\n"+Constant.ANSI_RESET);
                         }
                         input = "999";
                         break;
@@ -323,7 +321,7 @@ public class Controller {
                     printRecords();
 
                     /* Directory not found */
-                    File gameRecordsDir = new File(".\\game records");
+                    File gameRecordsDir = new File(Constant.CWD+"game records");
                     if (!gameRecordsDir.exists() || countRecords()==0){
                         input = "999";
                         break;
@@ -360,7 +358,7 @@ public class Controller {
                                 else
                                     playerFoundInFirstRound = true;
 
-                                System.out.println("\n"+ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ ANSI_RESET);
+                                System.out.println("\n"+Constant.ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ Constant.ANSI_RESET);
 
                                 int step=0;
 
@@ -462,7 +460,7 @@ public class Controller {
                                         }
 
                                         printRecords();
-                                        File directory = new File(".\\game records");
+                                        File directory = new File(Constant.CWD+"game records");
                                         if (!directory.exists() && !directory.isDirectory())
                                             if (directory.mkdir())
                                                 System.out.println("Directory for game record is created.");
@@ -602,13 +600,13 @@ public class Controller {
 
                         if (loadedGame.getGameRound()==100 || loadedGame.getPlayersList().size() == 1){
                             if (loadedGame.getPlayersList().size() == 1)
-                                System.out.println("\n"+ANSI_GREEN+"####\t\t"+loadedGame.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+ANSI_RESET);
+                                System.out.println("\n"+Constant.ANSI_GREEN+"####\t\t"+loadedGame.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+Constant.ANSI_RESET);
                             else{
-                                System.out.println("\n"+ANSI_GREEN+"####\t\tTie!!!\t\t####");
+                                System.out.println("\n"+Constant.ANSI_GREEN+"####\t\tTie!!!\t\t####");
                                 for (Player player : loadedGame.getPlayersList()){
                                     System.out.print(player.getName()+" ");
                                 }
-                                System.out.println("are the winners!!!\n"+ANSI_RESET);
+                                System.out.println("are the winners!!!\n"+Constant.ANSI_RESET);
                             }
                             input = "999";
                             break;
@@ -625,7 +623,7 @@ public class Controller {
                 * (View and delete) */
                 case "3":
                     printRecords();
-                    File directory = new File(".\\game records");
+                    File directory = new File(Constant.CWD+"game records");
                     if (directory.exists() && countRecords()!=0){
                         do {
                             System.out.println("\nWhich record would you like to delete? (Type \"back\" to return)");
@@ -671,7 +669,7 @@ public class Controller {
      * @return  input   the string of player's input
      */
     public String scanInput(){
-        System.out.print(ANSI_GREEN + "-> " +ANSI_RESET);
+        System.out.print(Constant.ANSI_GREEN + "-> " +Constant.ANSI_RESET);
         String input = "";
         try{
             input = br.readLine();
@@ -727,8 +725,9 @@ public class Controller {
     /**
      * Display saved game records
      */
-    public void printRecords(){
-        File recordsDir = new File(".\\game records\\");
+    public void printRecords() throws URISyntaxException {
+
+        File recordsDir = new File(Constant.CWD+"game records/");
         File[] directoryListing = recordsDir.listFiles();
         ArrayList<File> gameRecords = new ArrayList<>();
 
@@ -743,9 +742,8 @@ public class Controller {
                 String name = gameRecords.get(i).getName();
                 long time = gameRecords.get(i).lastModified();
                 Date date = new Date(time);
-                System.out.println(
-                        i+1 + ". \t Name: " + name +
-                        "  \t Created Time: " + date);
+                System.out.printf( "%d. \t Name: %-21s ",i+1,name);
+                System.out.println("Created Time: " + date);
             }
         }else{
             System.out.println("You don't have any game records yet.");
@@ -759,7 +757,7 @@ public class Controller {
      * @return      True if unique, False if unique
      */
     public boolean isUniqueNameRecords(String name){
-        File recordsDir = new File(".\\game records\\");
+        File recordsDir = new File(Constant.CWD+"game records/");
         File[] directoryListing = recordsDir.listFiles();
         boolean ret = true;
         if (directoryListing!=null) {
@@ -778,7 +776,7 @@ public class Controller {
      * @return the number of saved records
      */
     public int countRecords(){
-        File recordsDir = new File(".\\game records\\");
+        File recordsDir = new File(Constant.CWD+"game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             return directoryListing.length;
@@ -793,7 +791,7 @@ public class Controller {
      * @param number    the number that represents the certain record
      */
     public void deleteRecords(int number){
-        File recordsDir = new File(".\\game records\\");
+        File recordsDir = new File(Constant.CWD+"game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             for (int i=0; i<directoryListing.length;i++) {
@@ -810,7 +808,7 @@ public class Controller {
      * @param name      the name of the record
      */
     public void deleteRecords(String name){
-        File recordsDir = new File(".\\game records\\");
+        File recordsDir = new File(Constant.CWD+"game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             for (File file : directoryListing) {
@@ -829,7 +827,7 @@ public class Controller {
      * @return          the name of the record
      */
     public String findRecords(int number){
-        File recordsDir = new File(".\\game records\\");
+        File recordsDir = new File(Constant.CWD+"game records/");
         File[] directoryListing = recordsDir.listFiles();
         String ret ="";
         if (directoryListing!=null) {
@@ -874,7 +872,7 @@ public class Controller {
     public void saveGame(String name, Game game, Player player) {
         GameRecord recordToSave = new GameRecord(name, game, player);
         try{
-            FileOutputStream fos = new FileOutputStream(".\\game records\\"+name+".ser");
+            FileOutputStream fos = new FileOutputStream(Constant.CWD+"game records/"+name+".ser");
             ObjectOutputStream out =new ObjectOutputStream(fos);
             out.writeObject(recordToSave);
             out.close();
@@ -894,7 +892,7 @@ public class Controller {
     public GameRecord loadGame(String fileName){
         GameRecord recordToLoad;
         try{
-            FileInputStream fis = new FileInputStream(".\\game records\\"+fileName+".ser");
+            FileInputStream fis = new FileInputStream(Constant.CWD+"game records/"+fileName+".ser");
             ObjectInputStream in =new ObjectInputStream(fis);
             recordToLoad = (GameRecord)in.readObject();
             in.close();

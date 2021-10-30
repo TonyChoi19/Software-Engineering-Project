@@ -32,7 +32,7 @@ public class Board implements Serializable {
             if (square.isProperty() && square.belongsTo() == null)
                 System.out.printf("%-3d %-18s  \u001B[32mAvailable\u001B[0m\n", square.getPos(), square.getName());
             else if (square.isProperty() && square.belongsTo() != null)
-                System.out.printf("%-3d %-18s  \u001B[31mOccupied\u001B[0m  %s\n", square.getPos(), square.getName(), square.getOwner().getName());
+                System.out.printf("%-3d %-18s  \u001B[31mOccupied\u001B[0m  %s's property\n", square.getPos(), square.getName(), square.getOwner().getName());
             else
                 System.out.printf("%-3d %-18s\n", square.getPos(), square.getName());
         }
