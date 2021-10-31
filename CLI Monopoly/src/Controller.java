@@ -165,9 +165,9 @@ public class Controller {
                                             do {
                                                 System.out.println("Please choose one record to overwrite." );
                                                 input = scanInput();
-                                                if (!isValidForSaveInput(input))
+                                                if (!isInRangeOfRecords(input))
                                                     printInvalidMsg();
-                                            }while(!isValidForSaveInput(input));
+                                            }while(!isInRangeOfRecords(input));
 
                                             deleteRecords(Integer.parseInt(input));
                                             saveGame(recordName, game, player);
@@ -333,7 +333,7 @@ public class Controller {
                     do {
                         System.out.println("\nWhich record would you want to load? (Type \"back\" to return)");
                         input = scanInput();
-                        if (!isValidForSaveInput(input)){
+                        if (!isInRangeOfRecords(input)){
                             if (input.toUpperCase().equals("BACK"))
                                 break;
                             printInvalidMsg();
@@ -476,9 +476,9 @@ public class Controller {
                                                 do {
                                                     System.out.println("Please choose one record to overwrite." );
                                                     input = scanInput();
-                                                    if (!isValidForSaveInput(input))
+                                                    if (!isInRangeOfRecords(input))
                                                         printInvalidMsg();
-                                                }while(!isValidForSaveInput(input));
+                                                }while(!isInRangeOfRecords(input));
 
                                                 deleteRecords(Integer.parseInt(input));
                                                 saveGame(recordName, loadedGame, player);
@@ -613,7 +613,7 @@ public class Controller {
                         }
 
 
-                    }while(!isValidForSaveInput(input));
+                    }while(!isInRangeOfRecords(input));
 
                     break;
 
@@ -628,7 +628,7 @@ public class Controller {
                         do {
                             System.out.println("\nWhich record would you like to delete? (Type \"back\" to return)");
                             input = scanInput();
-                            if (isValidForSaveInput(input)) {
+                            if (isInRangeOfRecords(input)) {
                                 deleteRecords(Integer.parseInt(input));
                                 break;
                             }else if(input.toUpperCase().equals("BACK")){
@@ -636,7 +636,7 @@ public class Controller {
                             }else{
                                 printInvalidMsg();
                             }
-                        }while (!isValidForSaveInput(input));
+                        }while (!isInRangeOfRecords(input));
                     }
                     input = "999";
                     break;
@@ -850,12 +850,12 @@ public class Controller {
     }
 
     /**
-     * Distinguish the input is in the range of the records existed
+     * Distinguish if the input is in the range of the records existed
      *
      * @param input     number
      * @return          in the range --> true, not the range --> false
      */
-    public boolean isValidForSaveInput(String input){
+    public boolean isInRangeOfRecords(String input){
         if (isNumeric(input)){
             return  Integer.parseInt(input)>=1 && Integer.parseInt(input)<=countRecords();
         }else
