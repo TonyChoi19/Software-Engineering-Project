@@ -1,26 +1,19 @@
-import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.After;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import javax.swing.*;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+
 
 
 class ControllerTest {
 
+    //init
     private Controller controller = new Controller();
     private Game game = new Game(6);
 
 
-    /* make directory if it doesn't exist */
+    /* To make directory if it doesn't exist */
     @BeforeAll
     public static void createDir(){
         String path = Constant.CWD+"game records";
@@ -33,8 +26,7 @@ class ControllerTest {
 
 
 
-
-    /* Testing the record name is unique or not */
+    /* To test the record name is unique or not */
     @Test
     void isUniqueNameRecords() {
         //It is unique when the dir is empty
@@ -45,7 +37,7 @@ class ControllerTest {
         assertFalse(controller.isUniqueNameRecords("test1"));
     }
 
-    /* Count the number of saved records */
+    /* To test whether countRecords() can return the correct number of saved records */
     @Test
     void countRecords() {
         //return 0 if no records
@@ -64,7 +56,7 @@ class ControllerTest {
         assertEquals(3, controller.countRecords());
     }
 
-    /* Delete a record by option number */
+    /*  To test whether deleteRecords() can delete a record by option number */
     @Test
     void deleteRecords() {
         //add a record first and make sure it existed
@@ -81,7 +73,7 @@ class ControllerTest {
         //In here, there is only one record, so that "1" represents test1.ser
     }
 
-    /* Delete a record by record name */
+    /*  To test whether deleteRecords() can delete a record by record name */
     @Test
     void testDeleteRecords() {
         //add a record first and make sure it existed
@@ -98,7 +90,7 @@ class ControllerTest {
         //In here, there is only one record, so that "1" represents test1.ser
     }
 
-    /* Find records' name with option number */
+    /*  To test whether findRecords() can find records' name with option number */
     @Test
     void findRecords() {
         //adding a few records
@@ -117,7 +109,7 @@ class ControllerTest {
         assertEquals(controller.findRecords(5), "");
     }
 
-    /* Check if it is numeric */
+    /*  To test whether isNumeric() can check if it is numeric */
     @Test
     void isNumeric() {
         assertTrue(controller.isNumeric("0"));
@@ -130,7 +122,7 @@ class ControllerTest {
         assertFalse(controller.isNumeric("/23^2121"));
     }
 
-    /* Distinguish if the input is in the range of the records existed */
+    /* To distinguish if the input is in the range of the records existed */
     @Test
     void isInRangeOfRecords() {
         //If there is no record,  no option will be provided for players. Nothing is valid
@@ -159,7 +151,7 @@ class ControllerTest {
     /* Game saving */
     @Test
     void saveGame() {
-        //no records at the beginning
+        //no records at the beginning --> 0 record
         assertEquals(0, controller.countRecords());
 
         //adding a few records
@@ -179,7 +171,7 @@ class ControllerTest {
         assertEquals(5, controller.countRecords());
     }
 
-    /* Game loading -- returning the game record which is about to load */
+    /* Game loading -- test the return of the game record which is about to load */
     @Test
     void loadGame() {
         //Load the record which not exists

@@ -5,10 +5,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BoardTest {
 
+    /* This is to test whether findSquare() can return correct Square by the position */
     @Test
     void findSquare() {
         Board board = new Board();
-
+        //Checking corresponding square
         assertEquals(board.findSquare(1), board.squares.get(0));
         assertEquals(board.findSquare(2), board.squares.get(1));
         assertEquals(board.findSquare(3), board.squares.get(2));
