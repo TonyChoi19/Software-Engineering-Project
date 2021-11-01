@@ -298,7 +298,7 @@ public class Controller {
                     }
 
                     /* announce game result when game ends */
-                    if (game.getGameRound()==100 || game.getPlayersList().size() == 1){
+                    if (game.getGameRound()==101 || game.getPlayersList().size() == 1){
                         if (game.getPlayersList().size() == 1)
                             System.out.println("\n"+Constant.ANSI_GREEN+"####\t\t"+game.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+Constant.ANSI_RESET);
                         else{
@@ -598,7 +598,7 @@ public class Controller {
                             loadedGame.setGameRound(loadedGame.getGameRound() + 1);
                         }
 
-                        if (loadedGame.getGameRound()==100 || loadedGame.getPlayersList().size() == 1){
+                        if (loadedGame.getGameRound()==101 || loadedGame.getPlayersList().size() == 1){
                             if (loadedGame.getPlayersList().size() == 1)
                                 System.out.println("\n"+Constant.ANSI_GREEN+"####\t\t"+loadedGame.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+Constant.ANSI_RESET);
                             else{
