@@ -1,5 +1,4 @@
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -15,18 +14,19 @@ public class Controller {
         this.br = new BufferedReader(isr);
     }
 
-    public void start() throws InterruptedException, URISyntaxException {
+    public void start() throws InterruptedException {
         //Play styled game intro
         Welcome welcome = new Welcome();
         welcome. playWelcome();
 
         String input;
+        boolean backToMainMenu;
 
         do {
             printMainMenu();
             input = scanInput();
+            backToMainMenu =false;
 
-            outerLoop:
             switch (input) {
                 /* NEW GAME */
                 case "1":
@@ -34,285 +34,17 @@ public class Controller {
                     do {
                         System.out.println("\nPlease enter the number of players: (Minimum=2, Maximum=6)");
                         input = scanInput();
-                        if (Integer.parseInt(input) < 2 || Integer.parseInt(input) > 6) {
+                        if (input.equals("") || Integer.parseInt(input) < 2 || Integer.parseInt(input) > 6) {
                             printInvalidMsg();
                         }else
                             break;
                     } while (true);
 
-
                     Game game = new Game(Integer.parseInt(input));
+                    runGame(game, null);
+                    backToMainMenu = true;
 
-                    /* Loop until the game rpund has reached 100 / only one player left */
-                    while(game.getGameRound() <=100 && game.getPlayersList().size() != 1){
-                        Iterator<Player> it = game.getPlayersList().iterator();
-                        while( it.hasNext()){
-                            Player player = it.next();
-                            System.out.println("\n"+Constant.ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ Constant.ANSI_RESET);
-
-                            int step=0;
-
-                            /* Payment option for players in jail */
-                            if (player.isHaveChoicePayJail()){
-                                do {
-                                    System.out.println("Do you want to pay a fine of HKD 150 to get free? (Y/N)");
-                                    input = scanInput();
-                                    if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
-                                        printInvalidMsg();
-                                }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
-
-                                /* pay fine to go */
-                                if (input.toUpperCase().equals("Y") && player.isEnoughMoneyToPay(150)){
-                                    player.deductMoney(150, "Fine");
-                                    player.releaseFromJail("Fine");
-                                }
-
-                                /* not enough money to pay fine */
-                                if (input.toUpperCase().equals("Y") && !player.isEnoughMoneyToPay(150)){
-                                    System.out.println("Sorry, you don't have enough money to pay");
-                                }
-
-                            }
-
-                            boolean repeatMenuFlag;
-                            do {
-                                repeatMenuFlag = false;
-                                printMainGameOption();
-                                input = scanInput();
-
-                                /* Throw the dice */
-                                if (input.equals("1")) {
-                                    step = game.dice.throwDice();
-                                    game.dice.printValue();
-
-                                    /* player in jail gets double */
-                                    if (game.dice.isDouble() && player.isInJail()) {
-                                        player.releaseFromJail("Double");
-                                    } else {
-                                        /* player in jail (not third turn) doesn't throw a double */
-                                        if (player.isHaveChoicePayJail()) {
-                                            player.setInJailCount(player.getInJailCount() + 1);
-                                        }
-                                        /* player in jail (third turn) doesn't throw a double --> must to pay the fine */
-                                        if (player.isInJail() && player.getInJailCount() == 3) {
-                                            System.out.println("This is your third turn in jail. You have to pay HKD150 to get out of jail.");
-                                            if (player.isEnoughMoneyToPay(150)) {
-                                                player.deductMoney(150, "Fine");
-                                                player.releaseFromJail("Fine");
-                                            } else {
-                                                System.out.println("You do not have enough money.");
-                                                player.deductMoney(150, "Fine");
-                                                player.freeProperty();
-                                            }
-                                        }
-                                    }
-
-                                    if (!player.isInJail()) {
-                                        player.move(step);
-                                    }
-                                /* Check all the info of the player */
-                                } else if (input.equals("2")) {
-                                    System.out.println("\nRound " + game.getGameRound() + "\t " + player.getName() + "'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")" + "\t Balance(HKD):" + player.getMoney());
-                                    System.out.println("Your property:");
-                                    if (player.getProperties().isEmpty())
-                                        System.out.println("NONE");
-                                    else {
-                                        System.out.printf("%-5s %-20s %-8s %-8s\n", "POS", "NAME", "PRICE", "RENT");
-                                        for (Square property : player.getProperties()) {
-                                            System.out.printf("%-5s %-20s %-8s %-8s\n", property.getPos(), property.getName(), property.getPrice(), property.getRent());
-                                        }
-                                    }
-
-                                /* Print the details of the board */
-                                } else if (input.equals("3")) {
-                                    game.board.printBoard();
-
-                                /* Save a record */
-                                } else if (input.equals("4")) {
-                                    do {
-                                        printSaveGameOption();
-                                        input = scanInput();
-                                        if (input.equals("1"))
-                                            break;
-                                        if (input.equals("2"))
-                                            break;
-                                        else
-                                            printInvalidMsg();
-                                    } while (true);
-
-                                    if (input.equals("2")) {
-                                        repeatMenuFlag = true;
-                                        continue;
-                                    }
-
-                                    printRecords();
-                                    String path = Constant.CWD+"game records";
-                                    File directory = new File(path);
-
-                                    if (!directory.exists() && !directory.isDirectory())
-                                        if (directory.mkdir())
-                                            System.out.println("Directory for game record is created.");
-
-                                    System.out.println("\nWhat would you like to name your record?");
-                                    input = scanInput();
-
-                                    String recordName = input;
-                                    if (isUniqueNameRecords(recordName) && countRecords()<5){
-                                        saveGame(recordName, game, player);
-                                    }
-                                    else{
-                                        if (countRecords()==5){
-                                            do {
-                                                System.out.println("Please choose one record to overwrite." );
-                                                input = scanInput();
-                                                if (!isInRangeOfRecords(input))
-                                                    printInvalidMsg();
-                                            }while(!isInRangeOfRecords(input));
-
-                                            deleteRecords(Integer.parseInt(input));
-                                            saveGame(recordName, game, player);
-                                        }else{
-                                            do {
-                                                System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
-                                                input = scanInput();
-                                                if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
-                                                    printInvalidMsg();
-                                            }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
-
-                                            if (input.toUpperCase().equals("Y")){
-                                                deleteRecords(recordName);
-                                                saveGame(recordName, game, player);
-                                            }
-                                        }
-
-                                    }
-                                    repeatMenuFlag = true;
-
-
-                                /* Back to main menu */
-                                } else if (input.equals("5")) {
-                                    break outerLoop;
-                                } else
-                                    printInvalidMsg();
-
-                            } while (!input.equals("1") || repeatMenuFlag);
-
-                            /* print player's pos after moving */
-                            game.printDetailedPos(player.getPos());
-
-
-                            /*
-                            After the move
-                             */
-
-
-                            /* Move to next position
-                            * Do the action due to the new position */
-                            int newPlayerPos = player.getPos();
-                            if (game.board.findSquare(newPlayerPos).getName().equals("Go to Jail")){
-                                System.out.println("You are going to jail(6).");
-                                player.setPos(6);
-                                player.setInJail(true);
-                            }
-
-                            if (game.board.findSquare(newPlayerPos).getName().equals("Income tax")){
-                                int tax;
-                                tax = (int) ((player.getMoney()*0.01/10)*10);
-                                System.out.println("You have to pay income tax for 10% of your money. (HKD"+ tax + ")");
-                                player.deductMoney(Math.abs(tax), "Tax");
-                            }
-
-                            if (game.board.findSquare(newPlayerPos).getName().equals("Chance")){
-                                Random random = new Random();
-                                int rand=0;
-                                while(rand==0) {
-                                    rand = (random.nextInt(200 + 300) - 300) / 10 * 10;
-                                }
-                                if (rand > 0){
-                                    System.out.println("You won a bonus of HKD"+ rand);
-                                    player.addMoney(rand);
-                                }
-                                else {
-                                    System.out.println("You lost HKD" + Math.abs(rand));
-                                    if (player.isEnoughMoneyToPay(Math.abs(rand))){
-                                        player.deductMoney(Math.abs(rand), "Fee");
-                                    }else{
-                                        System.out.println("You do not have enough money.");
-                                        player.deductMoney(Math.abs(rand), "Fee");
-                                        player.freeProperty();
-                                    }
-                                }
-                            }
-
-                            if (game.board.findSquare(newPlayerPos).isProperty()){
-                                Square square;
-                                square = game.board.findSquare(newPlayerPos);
-                                int rent = square.getRent();
-                                int price = square.getPrice();
-                                Player owner;
-                                owner = square.belongsTo();
-                                /* owned */
-                                if (owner!=null){
-                                    /* The property does not belong to current player */
-                                    if (player!=owner ){
-                                        System.out.println("You have to pay for the rent HKD" + rent);
-                                        if (player.isEnoughMoneyToPay(rent)){
-                                            player.deductMoney(Math.abs(rent), "Rent");
-                                            owner.addMoney(rent);
-                                        }else{
-                                            System.out.println("\nYou do not have enough money.");
-                                            System.out.println("The landlord will take over all your remaining money.");
-                                            player.setMoney(player.getMoney() - Math.abs(rent));
-                                            owner.addMoney(player.getMoney()+Math.abs(rent));
-                                            player.freeProperty();
-                                            it.remove();
-                                        }
-                                    }
-
-                                }else{
-                                    /* The property is available */
-                                    do {
-                                        System.out.println("Do you want to buy this property for HKD" + price +
-                                                "\n1 : Purchase" +
-                                                "\n2 : No, thank you.");
-                                        input = scanInput();
-
-                                        if (input.equals("1")){
-                                            /* have enough money to buy */
-                                            if (player.isEnoughMoneyToPay(price)){
-                                                player.purchaseProperty(square);
-                                                square.setOwner(player);
-                                                System.out.println("You have successfully owned " + square.getName());
-                                            }else {
-                                                System.out.println("You have not enough money to purchase.");
-                                            }
-                                        }
-                                    } while (!input.equals("1") && !input.equals("2"));
-                                }
-
-                            }
-
-
-                        }
-                        game.setGameRound(game.getGameRound() + 1);
-                    }
-
-                    /* announce game result when game ends */
-                    if (game.getGameRound()==101 || game.getPlayersList().size() == 1){
-                        if (game.getPlayersList().size() == 1)
-                            System.out.println("\n"+Constant.ANSI_GREEN+"####\t\t"+game.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+Constant.ANSI_RESET);
-                        else{
-                            System.out.println("\n"+Constant.ANSI_GREEN+"####\t\tTie!!!\t\t####");
-                            for (Player player : game.getPlayersList()){
-                                System.out.print(player.getName()+" ");
-                            }
-                            System.out.println("are the winners!!!\n"+Constant.ANSI_RESET);
-                        }
-                        input = "999";
-                        break;
-                    }
                     break;
-
 
 
 
@@ -344,274 +76,8 @@ public class Controller {
 
                         GameRecord  loadedGameRecord = loadGame(findRecords(chosenRecordNo));
                         Game loadedGame = loadedGameRecord.getGame();
-                        int loadedGameRound;
-                        loadedGameRound = loadedGame.getGameRound();
-                        boolean playerFoundInFirstRound = false;
-
-                        while(loadedGame.getGameRound() <=100 && loadedGame.getPlayersList().size() != 1){
-                            Iterator<Player> it = loadedGame.getPlayersList().iterator();
-                            while( it.hasNext()){
-                                Player player = it.next();
-                                if (player!=loadedGameRecord.getPlayerTurn() && loadedGame.getGameRound()==loadedGameRound && !playerFoundInFirstRound){
-                                    continue;
-                                }
-                                else
-                                    playerFoundInFirstRound = true;
-
-                                System.out.println("\n"+Constant.ANSI_YELLOW+"####\t\tRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ Constant.ANSI_RESET);
-
-                                int step=0;
-
-                                /* Payment option for players in jail */
-                                if (player.isHaveChoicePayJail()){
-                                    do {
-                                        System.out.println("Do you want to pay a fine of HKD 150 to get free? (Y/N)");
-                                        input = scanInput();
-                                        if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
-                                            printInvalidMsg();
-                                    }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
-
-                                    /* pay fine to go */
-                                    if (input.toUpperCase().equals("Y") && player.isEnoughMoneyToPay(150)){
-                                        player.deductMoney(150, "Fine");
-                                        player.releaseFromJail("Fine");
-                                    }
-
-                                    /* not enough money to pay fine */
-                                    if (input.toUpperCase().equals("Y") && !player.isEnoughMoneyToPay(150)){
-                                        System.out.println("Sorry, you don't have enough money to pay");
-                                    }
-
-                                }
-
-
-                                boolean repeatMenuFlag;
-                                do {
-                                    repeatMenuFlag = false;
-                                    printMainGameOption();
-                                    input= scanInput();
-
-                                    if (input.equals("1")){
-                                        /* player throws dice */
-                                        step = loadedGame.dice.throwDice();
-                                        loadedGame.dice.printValue();
-
-                                        /* player in jail gets double */
-                                        if (loadedGame.dice.isDouble() && player.isInJail()){
-                                            player.releaseFromJail("Double");
-                                        }else{
-                                            /* player in jail (not third turn) doesn't throw a double */
-                                            if (player.isHaveChoicePayJail()){
-                                                player.setInJailCount(player.getInJailCount() + 1);
-                                            }
-                                            /* player in jail (third turn) doesn't throw a double */
-                                            if (player.isInJail() && player.getInJailCount()==3){
-                                                System.out.println("This is your third turn in jail. You have to pay HKD150 to get out of jail.");
-                                                if (player.isEnoughMoneyToPay(150)){
-                                                    player.deductMoney(150, "Fine");
-                                                    player.releaseFromJail("Fine");
-                                                }else{
-                                                    System.out.println("You do not have enough money.");
-                                                    player.deductMoney(150, "Fine");
-                                                    player.freeProperty();
-                                                }
-                                            }
-                                        }
-
-                                        if(!player.isInJail()){
-                                            player.move(step);
-                                        }
-
-                                    }
-
-
-                                    else if (input.equals("2")){
-                                        System.out.println("\nRound " + loadedGame.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + loadedGame.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney());
-                                        System.out.println("Your property:");
-                                        if (player.getProperties().isEmpty())
-                                            System.out.println("NONE");
-                                        else {
-                                            System.out.printf("%-5s %-20s %-8s %-8s\n","POS","NAME", "PRICE", "RENT");
-                                            for (Square property : player.getProperties()){
-                                                System.out.printf("%-5s %-20s %-8s %-8s\n",property.getPos(),property.getName(), property.getPrice(), property.getRent());
-                                            }
-                                        }
-
-                                    }
-                                    else if (input.equals("3")){
-                                        loadedGame.board.printBoard();
-                                    }
-                                    else if (input.equals("4")){
-                                        //Save record
-                                        do {
-                                            printSaveGameOption();
-                                            input = scanInput();
-                                            if (input.equals("1"))
-                                                break;
-                                            else if (input.equals("2"))
-                                                break;
-                                             else
-                                                printInvalidMsg();
-                                        } while (true);
-
-                                        if (input.equals("2")) {
-                                            repeatMenuFlag = true;
-                                            continue;
-                                        }
-
-                                        printRecords();
-                                        File directory = new File(Constant.CWD+"game records");
-                                        if (!directory.exists() && !directory.isDirectory())
-                                            if (directory.mkdir())
-                                                System.out.println("Directory for game record is created.");
-                                        System.out.println("\nWhat would you like to name your record?");
-                                        input = scanInput();
-
-                                        String recordName = input;
-                                        if (isUniqueNameRecords(recordName) && countRecords()<5){
-                                            saveGame(recordName, loadedGame, player);
-                                        }
-                                        else{
-                                            if (countRecords()==5){
-                                                do {
-                                                    System.out.println("Please choose one record to overwrite." );
-                                                    input = scanInput();
-                                                    if (!isInRangeOfRecords(input))
-                                                        printInvalidMsg();
-                                                }while(!isInRangeOfRecords(input));
-
-                                                deleteRecords(Integer.parseInt(input));
-                                                saveGame(recordName, loadedGame, player);
-                                            }else{
-                                                do {
-                                                    System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
-                                                    input = scanInput();
-                                                    if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
-                                                        printInvalidMsg();
-                                                }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
-
-                                                if (input.toUpperCase().equals("Y")){
-                                                    deleteRecords(recordName);
-                                                    saveGame(recordName, loadedGame, player);
-                                                }
-                                            }
-
-                                        }
-                                        repeatMenuFlag = true;
-
-
-                                    } else if (input.equals("5")) {
-                                        break outerLoop;
-                                    } else
-                                        printInvalidMsg();
-
-                                } while (!input.equals("1") || repeatMenuFlag);
-
-                                /* print player's pos after moving */
-                                loadedGame.printDetailedPos(player.getPos());
-
-                                /* move to next point */
-                                int newPlayerPos = player.getPos();
-                                if (loadedGame.board.findSquare(newPlayerPos).getName().equals("Go to Jail")){
-                                    System.out.println("You are going to jail(6).");
-                                    player.setPos(6);
-                                    player.setInJail(true);
-                                }
-
-                                if (loadedGame.board.findSquare(newPlayerPos).getName().equals("Income tax")){
-                                    int tax;
-                                    tax = (int) ((player.getMoney()*0.01/10)*10);
-                                    System.out.println("You have to pay income tax for 10% of your money. (HKD"+ tax + ")");
-                                    player.deductMoney(Math.abs(tax), "Tax");
-                                }
-
-                                if (loadedGame.board.findSquare(newPlayerPos).getName().equals("Chance")){
-                                    Random random = new Random();
-                                    int rand=0;
-                                    while(rand==0) {
-                                        rand = (random.nextInt(200 + 300) - 300) / 10 * 10;
-                                    }
-                                    if (rand > 0){
-                                        System.out.println("You won a bonus of HKD"+ rand);
-                                        player.addMoney(rand);
-                                    }
-                                    else {
-                                        System.out.println("You lost HKD" + Math.abs(rand));
-                                        if (player.isEnoughMoneyToPay(Math.abs(rand))){
-                                            player.deductMoney(Math.abs(rand), "Fee");
-                                        }else{
-                                            System.out.println("You do not have enough money.");
-                                            player.deductMoney(Math.abs(rand), "Fee");
-                                            player.freeProperty();
-                                        }
-                                    }
-                                }
-
-                                if (loadedGame.board.findSquare(newPlayerPos).isProperty()){
-                                    Square square;
-                                    square = loadedGame.board.findSquare(newPlayerPos);
-                                    int rent = square.getRent();
-                                    int price = square.getPrice();
-                                    Player owner;
-                                    owner = square.belongsTo();
-                                    /* owned */
-                                    if (owner!=null){
-                                        /* The property does not belong to current player */
-                                        if (player!=owner ){
-                                            System.out.println("You have to pay for the rent HKD" + rent);
-                                            if (player.isEnoughMoneyToPay(Math.abs(rent))){
-                                                player.deductMoney(Math.abs(rent), "Rent");
-                                                owner.addMoney(Math.abs(rent));
-                                            }else{
-                                                System.out.println("\nYou do not have enough money.");
-                                                System.out.println("The landlord will take over all your remaining money.");
-                                                int moneyBeforeEnd = player.getMoney();
-                                                player.setMoney(player.getMoney() - Math.abs(rent));
-                                                owner.addMoney(player.getMoney()+Math.abs(rent));
-                                                player.freeProperty();
-                                                it.remove();
-                                            }
-                                        }
-
-                                    }else{  /* The property is available */
-                                        do {
-                                            System.out.println("Do you want to buy this property for HKD" + price +
-                                                    "\n1 : Purchase" +
-                                                    "\n2 : No, thank you.");
-                                            input = scanInput();
-
-                                            if (input.equals("1")){
-                                                /* have enough money to buy */
-                                                if (player.isEnoughMoneyToPay(price)){
-                                                    player.purchaseProperty(square);
-                                                    square.setOwner(player);
-                                                    System.out.println("You have successfully owned " + square.getName());
-                                                }else {
-                                                    System.out.println("You have not enough money to purchase.");
-                                                }
-                                            }
-                                        } while (!input.equals("1") && !input.equals("2"));
-                                    }
-                                }
-
-                            }
-                            loadedGame.setGameRound(loadedGame.getGameRound() + 1);
-                        }
-
-                        if (loadedGame.getGameRound()==101 || loadedGame.getPlayersList().size() == 1){
-                            if (loadedGame.getPlayersList().size() == 1)
-                                System.out.println("\n"+Constant.ANSI_GREEN+"####\t\t"+loadedGame.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+Constant.ANSI_RESET);
-                            else{
-                                System.out.println("\n"+Constant.ANSI_GREEN+"####\t\tTie!!!\t\t####");
-                                for (Player player : loadedGame.getPlayersList()){
-                                    System.out.print(player.getName()+" ");
-                                }
-                                System.out.println("are the winners!!!\n"+Constant.ANSI_RESET);
-                            }
-                            input = "999";
-                            break;
-                        }
-
+                        runGame(loadedGame, loadedGameRecord.getPlayerTurn());
+                        backToMainMenu = true;
 
                     }while(!isInRangeOfRecords(input));
 
@@ -638,7 +104,8 @@ public class Controller {
                             }
                         }while (!isInRangeOfRecords(input));
                     }
-                    input = "999";
+//                    input = "999";
+                    backToMainMenu = true;
                     break;
 
                 case "4":
@@ -649,7 +116,7 @@ public class Controller {
                     System.out.println("Sorry, please enter the correct number.");
                     break;
             }
-        }while(!input.equals("1") && !input.equals("2") && !input.equals("3") && !input.equals("4") );
+        }while(!input.equals("1") && !input.equals("2") && !input.equals("3") && !input.equals("4") || backToMainMenu);
 
     }
 
@@ -725,7 +192,7 @@ public class Controller {
     /**
      * Display saved game records
      */
-    public void printRecords() throws URISyntaxException {
+    public void printRecords() {
 
         File recordsDir = new File(Constant.CWD+"game records/");
         File[] directoryListing = recordsDir.listFiles();
@@ -906,7 +373,313 @@ public class Controller {
         return recordToLoad;
     }
 
+    /**
+     * Run game
+     *
+     * @param game  new game / game from game record
+     * @param playerTurn    null for new game, player for load game
+     */
+    public void runGame(Game game, Player playerTurn) {
 
+        String input;
+        int initGameRound = game.getGameRound();
+        boolean playerFoundInFirstRound = false;
+
+        gameLoop:
+        /* Loop until the game round has reached 100 / only one player left */
+        while(game.getGameRound() <=100 && game.getPlayersList().size() != 1){
+            Iterator<Player> it = game.getPlayersList().iterator();
+            while( it.hasNext()){
+                Player player = it.next();
+
+                if (playerTurn!=null && player!=playerTurn && game.getGameRound()==initGameRound && !playerFoundInFirstRound)
+                    continue;
+                else
+                    playerFoundInFirstRound = true;
+
+                System.out.println("\n"+Constant.ANSI_YELLOW+"####\t\tRound " + game.getGameRound()  +"\t " + player.getName() +"'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")"+ "\t Balance(HKD):" + player.getMoney() + "\t\t#### "+ Constant.ANSI_RESET);
+
+                int step=0;
+
+                /* Payment option for players in jail */
+                if (player.isHaveChoicePayJail()){
+                    do {
+                        System.out.println("Do you want to pay a fine of HKD 150 to get free? (Y/N)");
+                        input = scanInput();
+                        if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
+                            printInvalidMsg();
+                    }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
+
+                    /* pay fine to go */
+                    if (input.toUpperCase().equals("Y") && player.isEnoughMoneyToPay(150)){
+                        player.deductMoney(150, "Fine");
+                        player.releaseFromJail("Fine");
+                    }
+
+                    /* not enough money to pay fine */
+                    if (input.toUpperCase().equals("Y") && !player.isEnoughMoneyToPay(150)){
+                        System.out.println("Sorry, you don't have enough money to pay");
+                    }
+
+                }
+
+                boolean repeatMenuFlag;
+                do {
+                    repeatMenuFlag = false;
+                    printMainGameOption();
+                    input = scanInput();
+
+                    /* Throw the dice */
+                    if (input.equals("1")) {
+                        step = game.dice.throwDice();
+                        game.dice.printValue();
+
+                        /* player in jail gets double */
+                        if (game.dice.isDouble() && player.isInJail()) {
+                            player.releaseFromJail("Double");
+                        } else {
+                            /* player in jail (not third turn) doesn't throw a double */
+                            if (player.isHaveChoicePayJail()) {
+                                player.setInJailCount(player.getInJailCount() + 1);
+                            }
+                            /* player in jail (third turn) doesn't throw a double --> must pay the fine */
+                            if (player.isInJail() && player.getInJailCount() == 3) {
+                                System.out.println("\nThis is your third turn in jail. You have to pay HKD150 to get out of jail.");
+                                if (player.isEnoughMoneyToPay(150)) {
+                                    player.deductMoney(150, "Fine");
+                                    player.releaseFromJail("Fine");
+                                } else {
+                                    System.out.println("You do not have enough money.");
+                                    player.deductMoney(150, "Fine");
+                                    player.freeProperty();
+                                }
+                            }
+                        }
+
+                        if (!player.isInJail()) {
+                            player.move(step);
+                        }
+                        /* Check all the info of the player */
+                    } else if (input.equals("2")) {
+                        System.out.println("\nRound " + game.getGameRound() + "\t " + player.getName() + "'s turn\tPosition:" + game.board.findSquare(player.getPos()).getName() + "(" + player.getPos() + ")" + "\t Balance(HKD):" + player.getMoney());
+                        System.out.println("Your property:");
+                        if (player.getProperties().isEmpty())
+                            System.out.println("NONE");
+                        else {
+                            System.out.printf("%-5s %-20s %-8s %-8s\n", "POS", "NAME", "PRICE", "RENT");
+                            for (Square property : player.getProperties()) {
+                                System.out.printf("%-5s %-20s %-8s %-8s\n", property.getPos(), property.getName(), property.getPrice(), property.getRent());
+                            }
+                        }
+
+                        /* Print the details of the board */
+                    } else if (input.equals("3")) {
+                        game.board.printBoard();
+
+                        /* Save a record */
+                    } else if (input.equals("4")) {
+                        do {
+                            printSaveGameOption();
+                            input = scanInput();
+                            if (input.equals("1"))
+                                break;
+                            if (input.equals("2"))
+                                break;
+                            else
+                                printInvalidMsg();
+                        } while (true);
+
+                        if (input.equals("2")) {
+                            repeatMenuFlag = true;
+                            continue;
+                        }
+
+                        printRecords();
+                        String path = Constant.CWD+"game records";
+                        File directory = new File(path);
+
+                        if (!directory.exists() && !directory.isDirectory())
+                            if (directory.mkdir())
+                                System.out.println("Directory for game record is created.");
+
+                        System.out.println("\nWhat would you like to name your record?");
+                        input = scanInput();
+
+                        String recordName = input;
+                        if (isUniqueNameRecords(recordName) && countRecords()<5){
+                            saveGame(recordName, game, player);
+                        }
+                        else{
+                            if (countRecords()==5){
+                                do {
+                                    System.out.println("Please choose one record to overwrite." );
+                                    input = scanInput();
+                                    if (!isInRangeOfRecords(input))
+                                        printInvalidMsg();
+                                }while(!isInRangeOfRecords(input));
+
+                                deleteRecords(Integer.parseInt(input));
+                                saveGame(recordName, game, player);
+                            }else{
+                                do {
+                                    System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
+                                    input = scanInput();
+                                    if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
+                                        printInvalidMsg();
+                                }while(!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"));
+
+                                if (input.toUpperCase().equals("Y")){
+                                    deleteRecords(recordName);
+                                    saveGame(recordName, game, player);
+                                }
+                            }
+
+                        }
+                        repeatMenuFlag = true;
+
+
+                        /* Back to main menu */
+                    } else if (input.equals("5")) {
+                        break gameLoop;
+                    } else
+                        printInvalidMsg();
+
+                } while (!input.equals("1") || repeatMenuFlag);
+
+                /* print player's pos after moving */
+                game.printDetailedPos(player.getPos());
+
+
+                            /*
+                            After the move
+                             */
+
+
+                /* Move to next position
+                 * Do the action due to the new position */
+                int newPlayerPos = player.getPos();
+                if (game.board.findSquare(newPlayerPos).getName().equals("Go to Jail")){
+                    System.out.println("You are going to jail(6).");
+                    player.setPos(6);
+                    player.setInJail(true);
+                }
+
+                if (game.board.findSquare(newPlayerPos).getName().equals("Income tax")){
+                    int tax;
+                    tax = (int) (player.getMoney()*0.1-(player.getMoney()*0.1%10));
+                    System.out.println("You have to pay income tax for 10% of your money. (HKD"+ tax + ")");
+                    player.deductMoney(Math.abs(tax), "Tax");
+                }
+
+                if (game.board.findSquare(newPlayerPos).getName().equals("Chance")){
+                    Random random = new Random();
+                    int rand=0;
+                    while(rand==0) {
+                        rand = (random.nextInt(200 + 300) - 300) / 10 * 10;
+                    }
+                    if (rand > 0){
+                        System.out.println("You won a bonus of HKD"+ rand);
+                        player.addMoney(rand);
+                    }
+                    else {
+                        System.out.println("You lost HKD" + Math.abs(rand));
+                        if (player.isEnoughMoneyToPay(Math.abs(rand))){
+                            player.deductMoney(Math.abs(rand), "Fee");
+                        }else{
+                            System.out.println("You do not have enough money.");
+                            player.deductMoney(Math.abs(rand), "Fee");
+                            player.freeProperty();
+                        }
+                    }
+                }
+
+                if (game.board.findSquare(newPlayerPos).isProperty()){
+                    Square square;
+                    square = game.board.findSquare(newPlayerPos);
+                    int rent = square.getRent();
+                    int price = square.getPrice();
+                    Player owner;
+                    owner = square.belongsTo();
+                    /* owned */
+                    if (owner!=null){
+                        /* The property does not belong to current player */
+                        if (player!=owner ){
+                            System.out.println("You have to pay for the rent HKD" + rent);
+                            if (player.isEnoughMoneyToPay(rent)){
+                                player.deductMoney(Math.abs(rent), "Rent");
+                                owner.addMoney(rent);
+                            }else{
+                                System.out.println("\nYou do not have enough money.");
+                                System.out.println("The landlord will take over all your remaining money.");
+                                player.setMoney(player.getMoney() - Math.abs(rent));
+                                owner.addMoney(player.getMoney()+Math.abs(rent));
+                                player.freeProperty();
+                                it.remove();
+                            }
+                        }
+
+                    }else{
+                        /* The property is available */
+                        do {
+                            System.out.println("Do you want to buy this property for HKD" + price +
+                                    "\n1 : Purchase" +
+                                    "\n2 : No, thank you.");
+                            input = scanInput();
+
+                            if (input.equals("1")){
+                                /* have enough money to buy */
+                                if (player.isEnoughMoneyToPay(price)){
+                                    player.purchaseProperty(square);
+                                    square.setOwner(player);
+                                    System.out.println("You have successfully owned " + square.getName());
+                                }else {
+                                    System.out.println("You have not enough money to purchase.");
+                                }
+                            }
+                        } while (!input.equals("1") && !input.equals("2"));
+                    }
+
+                }
+
+                /* announce game result when only one player left*/
+                if (game.getPlayersList().size() == 1){
+                    System.out.println("\n"+Constant.ANSI_GREEN+"####\t\t"+game.getPlayersList().get(0).getName()+" is the winner!!!\t\t####"+Constant.ANSI_RESET);
+                    break;
+                }
+
+            }
+            game.setGameRound(game.getGameRound() + 1);
+        }
+
+        /* announce game result when game round has passed 100 */
+        if (game.getGameRound()==101) {
+            int maxMoney = 0;
+            ArrayList<Player> winner = new ArrayList<>();
+
+            //check the biggest amount of money
+            for (Player player1 : game.getPlayersList()) {
+                if (player1.getMoney() > maxMoney)
+                    maxMoney = player1.getMoney();
+            }
+
+            //check winners
+            for (Player player1 : game.getPlayersList()) {
+                if (player1.getMoney() == maxMoney)
+                    winner.add(player1);
+            }
+
+            if (winner.size() == 1) {
+                System.out.println("\n" + Constant.ANSI_GREEN + "####\t\t" + winner.get(0).getName() + " is the winner!!!\t\t####" + Constant.ANSI_RESET);
+            } else {
+                System.out.println("\n" + Constant.ANSI_GREEN + "####\t\tTie!!!\t\t####");
+                for (Player player1 : winner) {
+                    System.out.print(player1.getName() + " ");
+                }
+                System.out.println("are the winners!!!\n" + Constant.ANSI_RESET);
+            }
+        }
+
+    }
 
 
 

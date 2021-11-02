@@ -71,7 +71,7 @@ public class Player implements Serializable {
 
     public void freeProperty(){
         System.out.println("\n\u001B[31mYou have lost due to negative balance ($" + this.getMoney() + ")" +
-                "\nYour propoties will be automatically free.\u001B[0m");
+                "\nYour propoties will be automatically freed.\u001B[0m");
 
         if (this.properties.isEmpty())
             System.out.println("\nFreed Properties: NONE");
@@ -79,7 +79,7 @@ public class Player implements Serializable {
             System.out.println("\nFreed Properties:");
             for (Square property : this.properties){
                 property.setOwner(null);
-                System.out.println(property.name);
+                System.out.printf("%d.\t%s\n", property.getPos(), property.name);
             }
             properties = null;
         }
