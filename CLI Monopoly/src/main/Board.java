@@ -6,7 +6,9 @@ import java.util.ArrayList;
 public class Board implements Serializable {
     protected ArrayList<Square> squares = new ArrayList<>();
 
+    /* Constructor */
     public Board() {
+        //adding all the squares
         squares.add(new Function(1, "Go"));
         squares.add(new Property(2, "Central", 800, 90));
         squares.add(new Property(3, "Wan Chai", 700, 65));
@@ -29,6 +31,10 @@ public class Board implements Serializable {
         squares.add(new Property(20, "Tai O", 600, 25));
     }
 
+    /**
+     * Print board state
+     * e.g. squares no. , square name, players' position, properties' state
+     */
     public void printBoard(){
         for (Square square : squares){
             if (square.isProperty() && square.belongsTo() == null)
@@ -40,6 +46,11 @@ public class Board implements Serializable {
         }
     }
 
+    /**
+     * Fine the square by pos
+     * @param pos The position of the square
+     * @return Square
+     */
     public Square findSquare(int pos){
         Square ret = null;
         for (Square square : squares){

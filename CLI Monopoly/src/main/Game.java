@@ -9,6 +9,10 @@ public class Game implements Serializable {
     protected Board board = new Board();
     protected Dice dice = new Dice();
 
+    /**
+     * Constructor
+     * @param playerCount The amount of players
+     */
     public Game(int playerCount) {
         this.gameRound = 1;
 
@@ -30,6 +34,11 @@ public class Game implements Serializable {
         return gameRound;
     }
 
+
+    /**
+     * Print the position, name of the square, owner(if it is a property)
+     * @param pos The position of the square
+     */
     public void printDetailedPos(int pos){
         Board tempBoard = new Board();
         if (board.findSquare(pos).isProperty()){

@@ -9,11 +9,11 @@ public abstract class Square implements Serializable {
     protected int rent;
     protected Player owner;
 
-    protected boolean isProperty(){return false;}
+    protected boolean isProperty(){ return false; }
 
-    protected  boolean isFunction(){return false;}
+    protected  boolean isFunction(){ return false; }
 
-    protected Player belongsTo(){return null;}
+    protected Player belongsTo(){ return null; }
 
     public void setOwner(Player owner) {
         this.owner = owner;

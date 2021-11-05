@@ -4,6 +4,13 @@ import java.io.Serializable;
 
 public class Property extends Square implements Serializable {
 
+    /**
+     * Constructor
+     * @param pos Position
+     * @param name
+     * @param price
+     * @param rent
+     */
     public Property(int pos, String name, int price, int rent) {
         this.pos = pos;
         this.name = name;

@@ -11,11 +11,18 @@ public class Controller {
     private InputStreamReader isr;
     private BufferedReader br;
 
+    /**
+     * Constructor
+     */
     public Controller() {
         this.isr = new InputStreamReader(System.in);
         this.br = new BufferedReader(isr);
     }
 
+    /**
+     * Game start
+     * @throws InterruptedException
+     */
     public void start() throws InterruptedException {
         //Play styled game intro
         Welcome welcome = new Welcome();
@@ -25,6 +32,7 @@ public class Controller {
         boolean backToMainMenu;
 
         do {
+            //Display the main menu options
             printMainMenu();
             input = scanInput();
             backToMainMenu =false;
@@ -106,7 +114,6 @@ public class Controller {
                             }
                         }while (!isInRangeOfRecords(input));
                     }
-//                    input = "999";
                     backToMainMenu = true;
                     break;
 
@@ -135,7 +142,7 @@ public class Controller {
     /**
      * Read next line (user's input)
      *
-     * @return  input   the string of player's input
+     * @return  input   The string of player's input
      */
     public String scanInput(){
         System.out.print(Constant.ANSI_GREEN + "-> " +Constant.ANSI_RESET);
@@ -200,6 +207,7 @@ public class Controller {
         File[] directoryListing = recordsDir.listFiles();
         ArrayList<File> gameRecords = new ArrayList<>();
 
+        //Loop the directory and add the file to the arrayList
         if (directoryListing!=null && directoryListing.length!=0) {
             for (File file : directoryListing) {
                 if (file.getName().endsWith(".ser"))
@@ -222,8 +230,8 @@ public class Controller {
     /**
      * Distinguish the name if it is used
      *
-     * @param name  the typed name for the record
-     * @return      True if unique, False if unique
+     * @param name  The name for the record
+     * @return  Boolean  True if unique, False if unique
      */
     public boolean isUniqueNameRecords(String name){
         File recordsDir = new File(Constant.CWD+"game records/");
@@ -242,7 +250,7 @@ public class Controller {
     /**
      * Count the number of saved records
      *
-     * @return the number of saved records
+     * @return The number of saved records
      */
     public int countRecords(){
         File recordsDir = new File(Constant.CWD+"game records/");
@@ -257,7 +265,7 @@ public class Controller {
     /**
      * Delete saved record
      *
-     * @param number    the number that represents the certain record
+     * @param number    The number that represents the certain record
      */
     public void deleteRecords(int number){
         File recordsDir = new File(Constant.CWD+"game records/");
@@ -274,7 +282,7 @@ public class Controller {
     /**
      * Delete saved record
      *
-     * @param name      the name of the record
+     * @param name      The name of the record
      */
     public void deleteRecords(String name){
         File recordsDir = new File(Constant.CWD+"game records/");
@@ -292,8 +300,8 @@ public class Controller {
     /**
      * Get the name of record by number
      *
-     * @param number    the number that represents the certain record
-     * @return          the name of the record
+     * @param number    The number that represents the certain record
+     * @return          The name of the record
      */
     public String findRecords(int number){
         File recordsDir = new File(Constant.CWD+"game records/");
@@ -311,8 +319,8 @@ public class Controller {
     /**
      * Distinguish the input is numeric of not
      *
-     * @param input     player's input
-     * @return          numeric --> true, not numeric --> false,
+     * @param input     Player's input
+     * @return          Numeric --> true, not numeric --> false,
      */
     public boolean isNumeric(String input){
         return input != null && input.matches("[0-9.]+");
@@ -321,8 +329,8 @@ public class Controller {
     /**
      * Distinguish if the input is in the range of the records existed
      *
-     * @param input     number
-     * @return          in the range --> true, not the range --> false
+     * @param input     Number
+     * @return          In the range --> true, not the range --> false
      */
     public boolean isInRangeOfRecords(String input){
         if (isNumeric(input)){
@@ -334,9 +342,9 @@ public class Controller {
     /**
      * Save a game record as a file
      *
-     * @param name      the record name
-     * @param game      the game to be saved
-     * @param player    the turn of player
+     * @param name      The record name
+     * @param game      The game to be saved
+     * @param player    The turn of player
      */
     public void saveGame(String name, Game game, Player player) {
         GameRecord recordToSave = new GameRecord(name, game, player);
@@ -355,8 +363,8 @@ public class Controller {
     /**
      * Load a game record by the file name
      *
-     * @param fileName      the name of the game record
-     * @return              the record to be loaded
+     * @param fileName      The name of the game record
+     * @return              The record to be loaded
      */
     public GameRecord loadGame(String fileName){
         GameRecord recordToLoad;
@@ -378,8 +386,8 @@ public class Controller {
     /**
      * Run game
      *
-     * @param game  new game / game from game record
-     * @param playerTurn    null for new game, player for load game
+     * @param game  New game / game from game record
+     * @param playerTurn    Null for new game, player for load game
      */
     public void runGame(Game game, Player playerTurn) {
 
@@ -394,6 +402,7 @@ public class Controller {
             while( it.hasNext()){
                 Player player = it.next();
 
+                //restore the player turn
                 if (playerTurn!=null && player!=playerTurn && game.getGameRound()==initGameRound && !playerFoundInFirstRound)
                     continue;
                 else
@@ -524,7 +533,7 @@ public class Controller {
                                 saveGame(recordName, game, player);
                             }else{
                                 do {
-                                    System.out.println("There is a existing record with the same name, do you want to overwrite it? (Y/N)" );
+                                    System.out.println("\nThere is a existing record with the same name, do you want to overwrite it? (Y/N)" );
                                     input = scanInput();
                                     if (!input.toUpperCase().equals("Y") && !input.toUpperCase().equals("N"))
                                         printInvalidMsg();
