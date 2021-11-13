@@ -58,7 +58,7 @@ public class Controller {
                     view.printRecords();
 
                     /* Directory not found */
-                    File gameRecordsDir = new File(Constant.CWD+"game records");
+                    File gameRecordsDir = new File(Constant.CWD+"Game records");
                     if (!gameRecordsDir.exists() || countRecords()==0){
                         input = "999";
                         break;
@@ -94,7 +94,7 @@ public class Controller {
                 * (View and delete) */
                 case "3":
                     view.printRecords();
-                    File directory = new File(Constant.CWD+"game records");
+                    File directory = new File(Constant.CWD+"Game records");
                     if (directory.exists() && countRecords()!=0){
                         do {
                             view.print("\nWhich record would you like to delete? (Type \"back\" to return)");
@@ -140,7 +140,7 @@ public class Controller {
      * @return  Boolean  True if unique, False if unique
      */
     public boolean isUniqueNameRecords(String name){
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         boolean ret = true;
         if (directoryListing!=null) {
@@ -159,7 +159,7 @@ public class Controller {
      * @return The number of saved records
      */
     public int countRecords(){
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             return directoryListing.length;
@@ -174,7 +174,7 @@ public class Controller {
      * @param number    The number that represents the certain record
      */
     public void deleteRecords(int number){
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             for (int i=0; i<directoryListing.length;i++) {
@@ -191,7 +191,7 @@ public class Controller {
      * @param name      The name of the record
      */
     public void deleteRecords(String name){
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             for (File file : directoryListing) {
@@ -210,7 +210,7 @@ public class Controller {
      * @return          The name of the record
      */
     public String findRecords(int number){
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         String ret ="";
         if (directoryListing!=null) {
@@ -255,7 +255,7 @@ public class Controller {
     public void saveGame(String name, Game game, Player player) {
         GameRecord recordToSave = new GameRecord(name, game, player);
         try{
-            FileOutputStream fos = new FileOutputStream(Constant.CWD+"game records/"+name+".ser");
+            FileOutputStream fos = new FileOutputStream(Constant.CWD+"Game records/"+name+".ser");
             ObjectOutputStream out =new ObjectOutputStream(fos);
             out.writeObject(recordToSave);
             out.close();
@@ -275,7 +275,7 @@ public class Controller {
     public GameRecord loadGame(String fileName){
         GameRecord recordToLoad;
         try{
-            FileInputStream fis = new FileInputStream(Constant.CWD+"game records/"+fileName+".ser");
+            FileInputStream fis = new FileInputStream(Constant.CWD+"Game records/"+fileName+".ser");
             ObjectInputStream in =new ObjectInputStream(fis);
             recordToLoad = (GameRecord)in.readObject();
             in.close();
@@ -495,7 +495,7 @@ public class Controller {
                         }
 
                         view.printRecords();
-                        String path = Constant.CWD+"game records";
+                        String path = Constant.CWD+"Game records";
                         File directory = new File(path);
 
                         if (!directory.exists() && !directory.isDirectory())

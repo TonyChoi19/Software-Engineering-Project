@@ -108,7 +108,7 @@ public class View implements Serializable {
      * Display saved game records
      */
     public void printRecords() {
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         ArrayList<File> gameRecords = new ArrayList<>();
 
