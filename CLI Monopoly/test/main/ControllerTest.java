@@ -21,7 +21,7 @@ public class ControllerTest {
     /* To make directory if it doesn't exist */
     @BeforeAll
     public static void createDir(){
-        String path = Constant.CWD+"game records";
+        String path = Constant.CWD+"Game records";
         File directory = new File(path);
 
         if (!directory.exists() && !directory.isDirectory())
@@ -33,7 +33,7 @@ public class ControllerTest {
     /* Empty the directory before all the tests */
     @BeforeAll
     public static void emptyDirBeforeAll(){
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             for (File file : directoryListing) {
@@ -854,7 +854,7 @@ public class ControllerTest {
     /* Empty the directory after each test */
     @AfterEach
     public void emptyDirEach(){
-        File recordsDir = new File(Constant.CWD+"game records/");
+        File recordsDir = new File(Constant.CWD+"Game records/");
         File[] directoryListing = recordsDir.listFiles();
         if (directoryListing!=null) {
             for (File file : directoryListing) {
