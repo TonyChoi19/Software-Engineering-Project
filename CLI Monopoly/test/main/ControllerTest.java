@@ -266,10 +266,7 @@ public class ControllerTest {
                 "4. \t Save\n" +
                 "5. \t Back to main menu\n" +
                 "Please enter the number to choose\n";
-        expected = expected.replaceAll("\n", "").replaceAll("\t", "");
         String actual = consoleOutput.toString()
-                .replaceAll("\n", "")
-                .replaceAll("\t", "")
                 .replaceAll("\r","");
         assertEquals(expected, actual);
 
